@@ -29,7 +29,6 @@
 
     <!-- KPI / Gün Sonu Statistikaları -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <!-- Nağd Satış -->
       <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm">
         <div class="flex justify-between items-center text-slate-400 mb-2">
           <span class="text-sm font-medium">Nağd Satış</span>
@@ -38,7 +37,6 @@
         <div id="stat-cash" class="text-2xl font-bold text-slate-100">0.00 AZN</div>
       </div>
 
-      <!-- Kart / Köçürmə -->
       <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm">
         <div class="flex justify-between items-center text-slate-400 mb-2">
           <span class="text-sm font-medium">Kart Satışı</span>
@@ -47,7 +45,6 @@
         <div id="stat-card" class="text-2xl font-bold text-slate-100">0.00 AZN</div>
       </div>
 
-      <!-- Xərclər (Rasxod) -->
       <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm">
         <div class="flex justify-between items-center text-slate-400 mb-2">
           <span class="text-sm font-medium">Xərclər (Rasxod)</span>
@@ -56,7 +53,6 @@
         <div id="stat-expense" class="text-2xl font-bold text-red-400">0.00 AZN</div>
       </div>
 
-      <!-- Yekun Gün Sonu Kassa Balansı -->
       <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm bg-gradient-to-br from-slate-800 to-slate-700">
         <div class="flex justify-between items-center text-slate-300 mb-2">
           <span class="text-sm font-semibold">Xalis Gün Sonu Kassası</span>
@@ -100,29 +96,38 @@
   </main>
 
   <script>
-    // Sizin canlı Google Apps Script Web App URL-iniz
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyQlNLVxNS9dIb-M_jRhjXx-OP25eyANRFXk555_25IVNfZ0JIaSOwm8c7tECJJDQhmRA/exec";
+    // Yeni Yenilənmiş Apps Script URL-iniz:
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwILVdzjQB7aCaThLCgXLmO1DeVKSHmNlYdby2g5yd9hehHkJZPgk-PsH_KORhImmXmbg/exec";
 
     async function fetchSheetData() {
       const tbody = document.getElementById("transactions-body");
-      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400"><i class="fa-solid fa-spinner fa-spin me-2"></i>Məlumatlar cədvəldən oxunur...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400"><i class="fa-solid fa-spinner fa-spin me-2"></i>Məlumatlar oxunur...</td></tr>`;
 
       try {
-        const res = await fetch(SCRIPT_URL);
+        const res = await fetch(SCRIPT_URL, { redirect: "follow" });
+        if(!res.ok) {
+          throw new Error(`Server cavabı mənfidir: ${res.status}`);
+        }
+        
         const data = await res.json();
 
-        // Statistikaları Yenilə
+        if (data.error) {
+          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-red-400">Google Script Xətası: ${data.error}</td></tr>`;
+          return;
+        }
+
+        // Statistikalar
         document.getElementById("stat-cash").innerText = (data.summary.cash || 0).toFixed(2) + " AZN";
         document.getElementById("stat-card").innerText = (data.summary.card || 0).toFixed(2) + " AZN";
         document.getElementById("stat-expense").innerText = (data.summary.expense || 0).toFixed(2) + " AZN";
         document.getElementById("stat-total").innerText = (data.summary.netTotal || 0).toFixed(2) + " AZN";
 
-        // Cədvəli Doldur
+        // Cədvəl
         document.getElementById("record-count").innerText = `${data.transactions.length} əməliyyat`;
         tbody.innerHTML = "";
 
         if(!data.transactions || data.transactions.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-500">Əməliyyat tapılmadı.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-500">Heç bir əməliyyat tapılmadı.</td></tr>`;
           return;
         }
 
@@ -146,12 +151,17 @@
         });
 
       } catch (error) {
-        console.error("Xəta baş verdi:", error);
-        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-red-400">Məlumatları yükləmək mümkün olmadı. Cədvəl giriş icazələrini yoxlayın.</td></tr>`;
+        console.error("Detallı Xəta:", error);
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="text-center py-8 text-red-400">
+              <p class="font-semibold text-base mb-1">Məlumat almaq mümkün olmadı</p>
+              <p class="text-xs text-slate-400">Səbəb: Apps Script-də "Execute as: Me" və "Who has access: Anyone" ayarlarını dəqiqləşdirin.</p>
+            </td>
+          </tr>`;
       }
     }
 
-    // Səhifə açıldıqda avtomatik yüklənir
     document.addEventListener("DOMContentLoaded", fetchSheetData);
   </script>
 </body>
