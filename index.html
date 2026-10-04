@@ -180,12 +180,18 @@
 
   <!-- EXPENSE MODAL -->
   <div id="expenseModal" class="fixed inset-0 z-[60] bg-slate-900/60 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden p-5 space-y-3">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden p-5 space-y-3" onclick="event.stopPropagation()">
       <h3 class="font-bold text-rose-700">Yeni Xərc Yaz</h3>
       <input type="text" id="expDesc" placeholder="Təyinat (Məs: Nəqliyyat)" class="w-full border rounded-lg px-3 py-2 text-sm">
       <input type="number" id="expAmount" placeholder="Məbləğ ₼" class="w-full border rounded-lg px-3 py-2 text-sm">
-      <select id="expMethod" class="w-full border rounded-lg px-3 py-2 text-sm bg-white"><option value="Nağd Kassa">Nağd Kassa</option><option value="Kart">Kart</option></select>
-      <button onclick="processExpense()" class="w-full bg-rose-500 text-white font-bold py-2.5 rounded-lg">Təsdiqlə</button>
+      <select id="expMethod" class="w-full border rounded-lg px-3 py-2 text-sm bg-white">
+        <option value="Nağd Kassa">Nağd Kassa</option>
+        <option value="Kart">Kart</option>
+      </select>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeModal('expenseModal')" class="flex-1 bg-slate-200 hover:bg-slate-300 font-semibold py-2.5 rounded-lg text-sm">Ləğv et</button>
+        <button type="button" onclick="processExpense()" class="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2.5 rounded-lg text-sm">Təsdiqlə</button>
+      </div>
     </div>
   </div>
 
