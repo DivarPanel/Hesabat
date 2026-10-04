@@ -1,4 +1,4 @@
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwPBQ61K5q74UbQxmchOQh5IRE_-54lxkpVcQVQV2K8fKDt7YA1-8sENf7rliwWuOjrOQ/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx2MDqan5LdW_73KMyJX5FrznSOO0be1Y_s0XHI3ftBp1CUFQ_AiB2E4dN0Mgn7btE6UQ/exec";
 
 let currentUser = null; 
 let cart = [];
@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadDataFromSheets() {
-  showToast("Bazadan məlumatlar yüklənir...", "blue");
+  showToast("DivarPanel_Final_Sablon bazasından yüklənir...", "blue");
   try {
     const response = await fetch(APPS_SCRIPT_URL);
     const data = await response.json();
@@ -21,7 +21,7 @@ async function loadDataFromSheets() {
       renderStockTable();
       renderReportsTable();
       renderDashboardStats();
-      showToast("DivarPanel_Final_Sablon sinxronlaşdırıldı!", "emerald");
+      showToast("Baza ilə uğurla sinxronlaşdırıldı!", "emerald");
     }
   } catch(err) {
     showToast("Bazadan məlumat oxunmadı. İnterneti yoxlayın.", "rose");
@@ -244,7 +244,7 @@ async function processStockIn() {
   document.getElementById('stockProdName').value = '';
   document.getElementById('stockQty').value = '';
   renderProducts(); renderStockTable(); renderReportsTable();
-  alert("Mal uğurla əlavə olundu və Excel bazasına yazıldı!");
+  alert("Mal uğurla əlavə olundu və bazaya yazıldı!");
 }
 
 async function processExpense() {
@@ -382,7 +382,7 @@ async function sendToGoogleSheets(payload) {
       headers: { "Content-Type": "text/plain" }, 
       body: JSON.stringify(payload) 
     });
-    showToast("Bazaya (Excel) uğurla yazıldı!", "emerald");
+    showToast("Bazaya uğurla yazıldı!", "emerald");
   } catch (err) {
     showToast("Xəta baş verdi!", "rose");
   }
