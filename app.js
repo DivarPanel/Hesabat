@@ -1,43 +1,30 @@
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFYGQa8mbPh2UwES5vds99MIrq64c1EbzP-5p_rnMETI9PMs5NEl3R4le9AZ2vdRs35w/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwPBQ61K5q74UbQxmchOQh5IRE_-54lxkpVcQVQV2K8fKDt7YA1-8sENf7rliwWuOjrOQ/exec";
+
 let currentUser = null; 
 let cart = [];
-let productsList = [
-  { name: "Bambuk Panel Premium (290x12)", price: 28.50, stock: 110 },
-  { name: "Mərmər Dekoru Panel (280x122)", price: 65.00, stock: 45 },
-  { name: "Akustik Panel Slat (280x60)", price: 45.00, stock: 5 }
-];
+let productsList = [];
 let transactionsList = [];
-let offlineQueue = JSON.parse(localStorage.getItem('dc_offline_queue') || '[]');
 
 document.addEventListener("DOMContentLoaded", () => {
   loadDataFromSheets();
 });
 
 async function loadDataFromSheets() {
-  showToast("Bazadan məlumatlar yenilənir...", "blue");
+  showToast("Bazadan məlumatlar yüklənir...", "blue");
   try {
     const response = await fetch(APPS_SCRIPT_URL);
     const data = await response.json();
     if(data.status === "success") {
-      if(data.products && data.products.length > 0) {
-        productsList = data.products;
-      }
-      if(data.transactions) {
-        transactionsList = data.transactions;
-      }
+      productsList = data.products || [];
+      transactionsList = data.transactions || [];
       renderProducts();
       renderStockTable();
       renderReportsTable();
       renderDashboardStats();
-      showToast("Məlumatlar uğurla sinxronlaşdırıldı!", "emerald");
+      showToast("DivarPanel_Final_Sablon sinxronlaşdırıldı!", "emerald");
     }
   } catch(err) {
-    console.log("Offline mode or fetch error:", err);
-    showToast("Internet bağlantısı yoxdur. Lokal verilər göstərilir.", "rose");
-    renderProducts();
-    renderStockTable();
-    renderReportsTable();
-    renderDashboardStats();
+    showToast("Bazadan məlumat oxunmadı. İnterneti yoxlayın.", "rose");
   }
 }
 
@@ -205,7 +192,6 @@ async function processSale() {
     items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price, total: i.qty * i.price }))
   };
 
-  // Lokal tarixçəyə də əlavə edirik
   cart.forEach(i => {
     transactionsList.push({
       date: saleDate, type: "Satış", user: currentUser.name, target: custName,
@@ -258,7 +244,7 @@ async function processStockIn() {
   document.getElementById('stockProdName').value = '';
   document.getElementById('stockQty').value = '';
   renderProducts(); renderStockTable(); renderReportsTable();
-  alert("Mal uğurla əlavə olundu!");
+  alert("Mal uğurla əlavə olundu və Excel bazasına yazıldı!");
 }
 
 async function processExpense() {
@@ -323,14 +309,14 @@ function renderReportsTable() {
 
 function renderDashboardStats() {
   const todayStr = new Date().toLocaleDateString();
-  document.getElementById('todayDateStr').innerText = new Date().toLocaleDateString('az-AZ');
+  const dateElem = document.getElementById('todayDateStr');
+  if(dateElem) dateElem.innerText = new Date().toLocaleDateString('az-AZ');
 
   let todaySalesTotal = 0;
   let todayExpensesTotal = 0;
   let todaySalesItems = [];
 
   transactionsList.forEach(trx => {
-    // Tarix müqayisəsi (tarix sətrinin içində bugünkü tarix varsa)
     if(trx.date && trx.date.includes(todayStr.slice(0, 5))) {
       if(trx.type === "Satış") {
         todaySalesTotal += Number(trx.total) || 0;
@@ -341,11 +327,14 @@ function renderDashboardStats() {
     }
   });
 
-  document.getElementById('dashSales').innerText = todaySalesTotal.toFixed(2) + " ₼";
-  document.getElementById('dashExpenses').innerText = todayExpensesTotal.toFixed(2) + " ₼";
-  document.getElementById('dashBalance').innerText = (todaySalesTotal - todayExpensesTotal).toFixed(2) + " ₼";
+  const dashSales = document.getElementById('dashSales');
+  const dashExpenses = document.getElementById('dashExpenses');
+  const dashBalance = document.getElementById('dashBalance');
 
-  // Bugünkü satılan məhsullar cədvəli
+  if(dashSales) dashSales.innerText = todaySalesTotal.toFixed(2) + " ₼";
+  if(dashExpenses) dashExpenses.innerText = todayExpensesTotal.toFixed(2) + " ₼";
+  if(dashBalance) dashBalance.innerText = (todaySalesTotal - todayExpensesTotal).toFixed(2) + " ₼";
+
   const todayTableBody = document.getElementById('todaySalesTableBody');
   if(todayTableBody) {
     if(todaySalesItems.length === 0) {
@@ -355,7 +344,7 @@ function renderDashboardStats() {
       [...todaySalesItems].reverse().forEach(item => {
         todayTableBody.innerHTML += `
           <tr class="border-b">
-            <td class="p-2.5 text-slate-500">${item.date.split(' ')[1] || item.date}</td>
+            <td class="p-2.5 text-slate-500">${item.date}</td>
             <td class="p-2.5 font-medium">${item.product}</td>
             <td class="p-2.5 text-center">${item.qty}</td>
             <td class="p-2.5 text-right">${Number(item.price).toFixed(2)} ₼</td>
@@ -386,19 +375,16 @@ function dayEndReport() {
 }
 
 async function sendToGoogleSheets(payload) {
-  if (!navigator.onLine) {
-    offlineQueue.push(payload);
-    localStorage.setItem('dc_offline_queue', JSON.stringify(offlineQueue));
-    showToast("İnternet yoxdur! Yadda saxlanıldı.", "rose");
-    return;
-  }
   try {
-    await fetch(APPS_SCRIPT_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
-    showToast("Bazaya uğurla yazıldı!", "emerald");
+    await fetch(APPS_SCRIPT_URL, { 
+      method: "POST", 
+      mode: "no-cors", 
+      headers: { "Content-Type": "text/plain" }, 
+      body: JSON.stringify(payload) 
+    });
+    showToast("Bazaya (Excel) uğurla yazıldı!", "emerald");
   } catch (err) {
-    offlineQueue.push(payload);
-    localStorage.setItem('dc_offline_queue', JSON.stringify(offlineQueue));
-    showToast("Xəta! Yadda saxlanıldı.", "rose");
+    showToast("Xəta baş verdi!", "rose");
   }
 }
 
