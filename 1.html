@@ -1,963 +1,607 @@
 <!DOCTYPE html>
-<html lang="az">
+<html lang="az" class="h-full bg-slate-900">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DecorConcept — İdarəetmə Paneli və Qaimə Sistemi</title>
+  <title>DivarPanel / DecorConcept — Excel Setup & Apps Script Guide</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    @media print {
-      body * { visibility: hidden; }
-      #printable-receipt, #printable-receipt * { visibility: visible; }
-      #printable-receipt { position: absolute; left: 0; top: 0; width: 100%; }
-      .no-print { display: none !important; }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
     }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-screen pb-12">
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col antialiased">
 
-  <!-- Bildiriş (Toast) -->
-  <div id="toast" class="fixed bottom-5 right-5 bg-green-600 text-white px-4 py-3 rounded-xl shadow-2xl z-50 hidden flex items-center space-x-2 text-xs font-bold transition-all duration-300">
-    <i class="fa-solid fa-circle-check text-base"></i>
-    <span id="toast-msg">Əməliyyat uğurla yerinə yetirildi!</span>
-  </div>
-
-  <!-- Header -->
-  <header class="bg-slate-800 border-b border-slate-700 p-4 sticky top-0 z-40 shadow-lg">
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+  <header class="bg-slate-800 border-b border-slate-700/80 sticky top-0 z-40 shadow-lg backdrop-blur-md bg-opacity-90">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
       <div class="flex items-center space-x-3">
-        <div class="bg-blue-600/20 p-2.5 rounded-xl border border-blue-500/30 text-blue-400">
-          <i class="fa-solid fa-store text-xl"></i>
+        <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shadow-inner">
+          <i class="fa-solid fa-file-excel text-xl"></i>
         </div>
         <div>
-          <h1 class="text-xl font-bold tracking-wide text-slate-100">DecorConcept</h1>
-          <p class="text-xs text-slate-400">Xırdalan Eurohome m.228 | Tel: 055 203 22 71</p>
+          <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            DivarPanel / DecorConcept
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Google Sheet Sync v1.0</span>
+          </h1>
+          <p class="text-xs text-slate-400">Excel / Google Sheets Qurulum Bələdçisi və Apps Script Mənbə Kodu</p>
         </div>
       </div>
-      
-      <div class="flex flex-wrap items-center gap-2">
-        <button onclick="openModal('modal-sale')" class="bg-green-600 hover:bg-green-500 text-white px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 shadow">
-          <i class="fa-solid fa-cart-plus text-sm"></i>
-          <span>+ Satış Qaiməsi</span>
+
+      <div class="flex items-center space-x-2">
+        <button onclick="scrollToSection('script-section')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center space-x-2 shadow-md active:scale-95">
+          <i class="fa-solid fa-code"></i>
+          <span>Apps Script Kodu</span>
         </button>
-        <button onclick="openModal('modal-stock-in')" class="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 shadow">
-          <i class="fa-solid fa-truck-ramp-box text-sm"></i>
-          <span>+ Anbara Mal Qəbulu</span>
-        </button>
-        <button onclick="openModal('modal-expense')" class="bg-red-600 hover:bg-red-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 shadow">
-          <i class="fa-solid fa-minus-circle"></i>
-          <span>+ Rasxod (Xərc)</span>
-        </button>
-        <button onclick="saveAndConfirmAll()" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-2 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 shadow">
-          <i class="fa-solid fa-floppy-disk"></i>
-          <span>Yadda Saxla</span>
-        </button>
-        <button onclick="fetchSheetData()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 border border-slate-600">
-          <i class="fa-solid fa-rotate"></i>
-          <span>Yenilə</span>
+        <button onclick="scrollToSection('calculator-section')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center space-x-2 shadow-md active:scale-95">
+          <i class="fa-solid fa-calculator"></i>
+          <span>Kalkulyator</span>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- Məzmun -->
-  <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8 flex-1 w-full">
 
-    <!-- FİLTİRLƏR BÖLMƏSİ -->
-    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-2">
-          <i class="fa-solid fa-filter text-blue-400"></i>
-          <span>Real-Vaxt Filtirləmə Paneli</span>
-        </h3>
-        <button onclick="resetFilters()" class="text-xs text-blue-400 hover:text-blue-300 transition flex items-center space-x-1">
-          <i class="fa-solid fa-arrow-rotate-left"></i>
-          <span>Filtirləri Sıfırla</span>
+    <!-- Overview Banner -->
+    <div class="bg-gradient-to-r from-indigo-900/40 via-slate-800 to-slate-800 border border-indigo-500/30 rounded-2xl p-6 shadow-xl relative overflow-hidden">
+      <div class="max-w-3xl space-y-2">
+        <h2 class="text-lg font-bold text-indigo-300 flex items-center gap-2">
+          <i class="fa-solid fa-layer-group"></i> Google Sheets Cədvəl Sütunlarının Strukturu
+        </h2>
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Google Sheets faylınızda aşağıdakı 4 vərəqi (Tab) tam dəqiq adlarla yaradın. Vərəq adlarının böyük/kiçik hərflərinə və sütun sırasına riayət olunması Eurohome / DivarPanel sisteminin fasiləsiz işləməsi üçün vacibdir.
+        </p>
+      </div>
+    </div>
+
+    <!-- Sheet Tabs Overview -->
+    <div class="bg-slate-800 rounded-xl border border-slate-700/80 p-4 shadow-sm space-y-4">
+      <div class="flex flex-wrap items-center gap-2 border-b border-slate-700/60 pb-3">
+        <button onclick="showSheetTab('tab-trx')" id="btn-sheet-trx" class="sheet-tab-btn active px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition flex items-center gap-2">
+          <i class="fa-solid fa-list-check"></i> Əməliyyat Jurnalı
+        </button>
+        <button onclick="showSheetTab('tab-prod')" id="btn-sheet-prod" class="sheet-tab-btn px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition flex items-center gap-2">
+          <i class="fa-solid fa-boxes-stacked"></i> Məhsullar və Stok
+        </button>
+        <button onclick="showSheetTab('tab-cust')" id="btn-sheet-cust" class="sheet-tab-btn px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition flex items-center gap-2">
+          <i class="fa-solid fa-users"></i> Müştərilər və Təchizatçılar
+        </button>
+        <button onclick="showSheetTab('tab-cash')" id="btn-sheet-cash" class="sheet-tab-btn px-4 py-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition flex items-center gap-2">
+          <i class="fa-solid fa-vault"></i> Pul Hərəkəti (Kassa)
         </button>
       </div>
-      
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Tarix üzrə</label>
-          <input type="date" id="filter-date" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+
+      <!-- Sheet 1: Əməliyyat Jurnalı -->
+      <div id="tab-trx" class="sheet-tab-content space-y-3">
+        <div class="flex justify-between items-center text-xs text-slate-400">
+          <span>Vərəq Adı: <strong class="text-indigo-400 font-mono">Əməliyyatlar</strong> və ya <strong class="text-indigo-400 font-mono">Transactions</strong></span>
+          <button onclick="copyHeaderRow('date\ttype\tcustomer\titem\tqty\tprice\ttotal\tpaymentType')" class="text-xs text-indigo-400 hover:underline flex items-center gap-1">
+            <i class="fa-solid fa-copy"></i> Sütun başlıqlarını kopyala
+          </button>
         </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Tərəf (Müştəri/Təchizatçı)</label>
-          <select id="filter-customer" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
-            <option value="">Hamısı</option>
-          </select>
+        <div class="overflow-x-auto rounded-lg border border-slate-700/80">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900/90 text-slate-400 uppercase font-mono border-b border-slate-700">
+              <tr>
+                <th class="py-2.5 px-3">A (ID / Date)</th>
+                <th class="py-2.5 px-3">B (Type)</th>
+                <th class="py-2.5 px-3">C (Customer)</th>
+                <th class="py-2.5 px-3">D (Item)</th>
+                <th class="py-2.5 px-3 text-center">E (Qty)</th>
+                <th class="py-2.5 px-3 text-right">F (Price)</th>
+                <th class="py-2.5 px-3 text-right">G (Total)</th>
+                <th class="py-2.5 px-3 text-center">H (Payment)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700/50 bg-slate-800/40 font-mono">
+              <tr>
+                <td class="py-2 px-3 text-slate-400">2026-10-04 11:30</td>
+                <td class="py-2 px-3 text-emerald-400">Satış</td>
+                <td class="py-2 px-3">Ramil Məmmədov</td>
+                <td class="py-2 px-3">Bambuk Panel Premium (290x12)</td>
+                <td class="py-2 px-3 text-center">10</td>
+                <td class="py-2 px-3 text-right">28.50</td>
+                <td class="py-2 px-3 text-right font-bold text-emerald-400">285.00</td>
+                <td class="py-2 px-3 text-center text-blue-400">Kart</td>
+              </tr>
+              <tr>
+                <td class="py-2 px-3 text-slate-400">2026-10-04 12:15</td>
+                <td class="py-2 px-3 text-rose-400">Xərc</td>
+                <td class="py-2 px-3">Logistika / Sürücü</td>
+                <td class="py-2 px-3">Anbar Nəqliyyat Haqqı</td>
+                <td class="py-2 px-3 text-center">1</td>
+                <td class="py-2 px-3 text-right">40.00</td>
+                <td class="py-2 px-3 text-right font-bold text-rose-400">40.00</td>
+                <td class="py-2 px-3 text-center text-amber-400">Nağd</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Əməliyyat Tipi</label>
-          <select id="filter-type" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
-            <option value="">Bütün Əməliyyatlar</option>
-            <option value="Satış">Satış</option>
-            <option value="Mal Qəbulu">Mal Qəbulu</option>
-            <option value="Məxaric (Xərc)">Məxaric (Xərc)</option>
-          </select>
+      </div>
+
+      <!-- Sheet 2: Məhsullar və Stok -->
+      <div id="tab-prod" class="sheet-tab-content hidden space-y-3">
+        <div class="flex justify-between items-center text-xs text-slate-400">
+          <span>Vərəq Adı: <strong class="text-indigo-400 font-mono">Məhsullar</strong> və ya <strong class="text-indigo-400 font-mono">Products</strong></span>
+          <button onclick="copyHeaderRow('id\tname\tcategory\tinitialQty\tcost\tprice')" class="text-xs text-indigo-400 hover:underline flex items-center gap-1">
+            <i class="fa-solid fa-copy"></i> Sütun başlıqlarını kopyala
+          </button>
         </div>
+        <div class="overflow-x-auto rounded-lg border border-slate-700/80">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900/90 text-slate-400 uppercase font-mono border-b border-slate-700">
+              <tr>
+                <th class="py-2.5 px-3">A (Kod/ID)</th>
+                <th class="py-2.5 px-3">B (Məhsul Adı)</th>
+                <th class="py-2.5 px-3">C (Kateqoriya)</th>
+                <th class="py-2.5 px-3 text-center">D (İlkin Stok)</th>
+                <th class="py-2.5 px-3 text-right">E (Maya ₼)</th>
+                <th class="py-2.5 px-3 text-right">F (Satış ₼)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700/50 bg-slate-800/40 font-mono">
+              <tr>
+                <td class="py-2 px-3 text-slate-400">PRD-001</td>
+                <td class="py-2 px-3 font-semibold text-slate-100">Bambuk Panel Premium (290x12)</td>
+                <td class="py-2 px-3">Bambuk</td>
+                <td class="py-2 px-3 text-center">120</td>
+                <td class="py-2 px-3 text-right">18.00</td>
+                <td class="py-2 px-3 text-right text-emerald-400">28.50</td>
+              </tr>
+              <tr>
+                <td class="py-2 px-3 text-slate-400">PRD-002</td>
+                <td class="py-2 px-3 font-semibold text-slate-100">Mərmər Dekoru Panel (280x122)</td>
+                <td class="py-2 px-3">Mərmər</td>
+                <td class="py-2 px-3 text-center">45</td>
+                <td class="py-2 px-3 text-right">42.00</td>
+                <td class="py-2 px-3 text-right text-emerald-400">65.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Sheet 3: Müştərilər və Təchizatçılar -->
+      <div id="tab-cust" class="sheet-tab-content hidden space-y-3">
+        <div class="flex justify-between items-center text-xs text-slate-400">
+          <span>Vərəq Adı: <strong class="text-indigo-400 font-mono">Müştərilər</strong> və ya <strong class="text-indigo-400 font-mono">Customers</strong></span>
+          <button onclick="copyHeaderRow('id\tname\tphone\ttype\tbalance')" class="text-xs text-indigo-400 hover:underline flex items-center gap-1">
+            <i class="fa-solid fa-copy"></i> Sütun başlıqlarını kopyala
+          </button>
+        </div>
+        <div class="overflow-x-auto rounded-lg border border-slate-700/80">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900/90 text-slate-400 uppercase font-mono border-b border-slate-700">
+              <tr>
+                <th class="py-2.5 px-3">A (ID)</th>
+                <th class="py-2.5 px-3">B (Ad Soyad / Şirkət)</th>
+                <th class="py-2.5 px-3">C (Telefon)</th>
+                <th class="py-2.5 px-3 text-center">D (Tip)</th>
+                <th class="py-2.5 px-3 text-right">E (Nisyə / Balans ₼)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700/50 bg-slate-800/40 font-mono">
+              <tr>
+                <td class="py-2 px-3 text-slate-400">CUST-101</td>
+                <td class="py-2 px-3 text-slate-100 font-semibold">EuroDesign QSC</td>
+                <td class="py-2 px-3">+994 50 123 45 67</td>
+                <td class="py-2 px-3 text-center"><span class="px-2 py-0.5 rounded bg-blue-900/50 text-blue-300">Korporativ</span></td>
+                <td class="py-2 px-3 text-right font-bold text-amber-400">120.00</td>
+              </tr>
+              <tr>
+                <td class="py-2 px-3 text-slate-400">SUP-201</td>
+                <td class="py-2 px-3 text-slate-100 font-semibold">Decor Import MMC (Təchizatçı)</td>
+                <td class="py-2 px-3">+994 12 400 00 00</td>
+                <td class="py-2 px-3 text-center"><span class="px-2 py-0.5 rounded bg-purple-900/50 text-purple-300">Təchizatçı</span></td>
+                <td class="py-2 px-3 text-right font-bold text-slate-400">0.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Sheet 4: Pul Hərəkəti (Kassa) -->
+      <div id="tab-cash" class="sheet-tab-content hidden space-y-3">
+        <div class="flex justify-between items-center text-xs text-slate-400">
+          <span>Vərəq Adı: <strong class="text-indigo-400 font-mono">Kassa</strong> və ya <strong class="text-indigo-400 font-mono">Cashflow</strong></span>
+          <button onclick="copyHeaderRow('date\ttype\tdescription\tmethod\tinflow\toutflow')" class="text-xs text-indigo-400 hover:underline flex items-center gap-1">
+            <i class="fa-solid fa-copy"></i> Sütun başlıqlarını kopyala
+          </button>
+        </div>
+        <div class="overflow-x-auto rounded-lg border border-slate-700/80">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900/90 text-slate-400 uppercase font-mono border-b border-slate-700">
+              <tr>
+                <th class="py-2.5 px-3">A (Tarix)</th>
+                <th class="py-2.5 px-3">B (Təyinat / Hərəkət)</th>
+                <th class="py-2.5 px-3">C (Ödəniş Üsulu)</th>
+                <th class="py-2.5 px-3 text-right">D (Mədaxil +)</th>
+                <th class="py-2.5 px-3 text-right">E (Məxaric -)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-700/50 bg-slate-800/40 font-mono">
+              <tr>
+                <td class="py-2 px-3 text-slate-400">2026-10-04</td>
+                <td class="py-2 px-3 text-slate-100">Satış Mədaxili (Ramil Məmmədov)</td>
+                <td class="py-2 px-3 text-blue-400">Kart / Pos</td>
+                <td class="py-2 px-3 text-right text-emerald-400 font-bold">+285.00</td>
+                <td class="py-2 px-3 text-right text-slate-500">-</td>
+              </tr>
+              <tr>
+                <td class="py-2 px-3 text-slate-400">2026-10-04</td>
+                <td class="py-2 px-3 text-slate-100">Anbar Nəqliyyat Haqqı</td>
+                <td class="py-2 px-3 text-amber-400">Nağd Kassa</td>
+                <td class="py-2 px-3 text-right text-slate-500">-</td>
+                <td class="py-2 px-3 text-right text-rose-400 font-bold">-40.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Google Apps Script Exporter Section -->
+    <div id="script-section" class="bg-slate-800 rounded-xl border border-slate-700/80 p-6 shadow-md space-y-4">
+      <div class="flex flex-wrap justify-between items-center gap-4 border-b border-slate-700/80 pb-4">
         <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Axtarış</label>
-          <div class="relative">
-            <input type="text" id="filter-search" onkeyup="applyFilters()" placeholder="Qaimə No, ad..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 pl-8 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
-            <i class="fa-solid fa-search absolute left-2.5 top-2.5 text-xs text-slate-500"></i>
+          <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+            <i class="fa-solid fa-code text-indigo-400"></i>
+            <span>Google Apps Script Mənbə Kodu (`Code.gs`)</span>
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">Bu kodu Google Sheets > Extensions > Apps Script bölməsinə yapışdırın və "Deploy as Web App" edin.</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="copyWebAppUrl()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 shadow active:scale-95">
+            <i class="fa-solid fa-link text-indigo-400"></i>
+            <span>Web App URL Kopyala</span>
+          </button>
+          <button onclick="copyScriptCode()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 shadow active:scale-95">
+            <i class="fa-solid fa-copy"></i>
+            <span id="copy-script-btn-text">Script Kodunu Kopyala</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700/80 flex items-center justify-between text-xs font-mono">
+        <span class="text-slate-400">Aktiv Web App Endpoint:</span>
+        <a href="https://script.google.com/macros/s/AKfycbyp_oDoZ3vznDKLrfHd0-sJiBA0Oi53doZFj_wrJhyecPHGfUO1hqoT21QJuUd-jxL8uQ/exec" target="_blank" class="text-indigo-400 hover:underline truncate max-w-md">https://script.google.com/macros/s/AKfycbyp_oDoZ3vznDKLrfHd0-sJiBA0Oi53doZFj_wrJhyecPHGfUO1hqoT21QJuUd-jxL8uQ/exec</a>
+      </div>
+
+      <div class="relative">
+        <pre class="bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs font-mono text-indigo-200 overflow-x-auto leading-relaxed max-h-96 select-all"><code id="apps-script-code">function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName("Transactions") || ss.getSheetByName("Əməliyyatlar") || ss.getSheets()[0];
+  var data = sheet.getDataRange().getValues();
+  
+  var transactions = [];
+  for (var i = 1; i < data.length; i++) {
+    var row = data[i];
+    if (!row[0]) continue;
+    
+    transactions.push({
+      id: "TRX-" + (100 + i),
+      date: formatDate(row[0]),
+      type: row[1] || "Satış",
+      customer: row[2] || "Müştəri",
+      item: row[3] || "Məhsul",
+      qty: Number(row[4]) || 1,
+      price: Number(row[5]) || 0,
+      total: Number(row[6]) || (Number(row[4]||1) * Number(row[5]||0)),
+      paymentType: row[7] || "Nağd"
+    });
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify({ transactions: transactions }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName("Transactions") || ss.getSheetByName("Əməliyyatlar") || ss.getSheets()[0];
+    var data = JSON.parse(e.postData.contents);
+    
+    sheet.appendRow([
+      data.date || new Date(),
+      data.type || "Satış",
+      data.customer || "",
+      data.item || "",
+      data.qty || 1,
+      data.price || 0,
+      data.total || 0,
+      data.paymentType || "Nağd"
+    ]);
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function formatDate(d) {
+  if (d instanceof Date) {
+    return Utilities.formatDate(d, Session.getScriptTimeZone(), "yyyy-MM-dd HH:mm");
+  }
+  return d.toString();
+}</code></pre>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2 text-xs text-slate-400">
+        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+          <strong class="text-slate-200 block mb-1">1. Quraşdırma:</strong>
+          Google Sheet-də <code>Extensions > Apps Script</code> hissəsinə keçin və yuxarıdakı kodu yapışdırın.
+        </div>
+        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+          <strong class="text-slate-200 block mb-1">2. Yayımlama:</strong>
+          <code>Deploy > New Deployment > Web App</code> seçin. Execute as: <i>Me</i>, Who has access: <i>Anyone</i> edin.
+        </div>
+        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-700/50">
+          <strong class="text-slate-200 block mb-1">3. İnteqrasiya:</strong>
+          Web App URL-i tənzimləndi: <code class="text-indigo-300">...AKfycbyp_oDoZ...</code>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interactive Calculator Section -->
+    <div id="calculator-section" class="bg-slate-800 rounded-xl border border-slate-700/80 p-6 shadow-md space-y-6">
+      <div class="border-b border-slate-700/80 pb-4">
+        <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+          <i class="fa-solid fa-calculator text-emerald-400"></i>
+          <span>İnteraktiv Dekorasiya Məhsul & Sahə Kalkulyatoru</span>
+        </h3>
+        <p class="text-xs text-slate-400 mt-0.5">Divar ölçülərinə əsasən lazım olan panel sayını və smeta dəyərini anında hesablayın.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Input Form -->
+        <div class="lg:col-span-6 space-y-4">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Divarın Eni (metr)</label>
+              <input type="number" step="0.1" id="calc-width" value="4.5" oninput="calculateMaterial()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 font-mono">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Divarın Hündürlüyü (metr)</label>
+              <input type="number" step="0.1" id="calc-height" value="2.8" oninput="calculateMaterial()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 font-mono">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Məhsul Tipi Seçin</label>
+            <select id="calc-product" onchange="calculateMaterial()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
+              <option value="bambuk" data-w="0.12" data-h="2.90" data-price="28.50">Bambuk Panel Premium (290x12cm) - 28.50 ₼/ədəd</option>
+              <option value="mermer" data-w="1.22" data-h="2.80" data-price="65.00">Mərmər Dekoru Panel (280x122cm) - 65.00 ₼/ədəd</option>
+              <option value="akustik" data-w="0.60" data-h="2.80" data-price="52.00">Akustik Reyka Panel (280x60cm) - 52.00 ₼/ədəd</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Ehtiyat / İsraf faizi (%)</label>
+              <input type="number" id="calc-waste" value="10" oninput="calculateMaterial()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 font-mono">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Endirim (%)</label>
+              <input type="number" id="calc-discount" value="5" oninput="calculateMaterial()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 font-mono">
+            </div>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- KPI Statistikaları -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm">
-        <div class="flex justify-between items-center text-slate-400 mb-2">
-          <span class="text-xs font-semibold">Nağd Satış</span>
-          <i class="fa-solid fa-money-bill-wave text-green-400"></i>
+        <!-- Result Display -->
+        <div class="lg:col-span-6 bg-slate-900/80 rounded-xl border border-slate-700 p-5 flex flex-col justify-between space-y-4">
+          <div class="space-y-3">
+            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2">Hesablama Nəticəsi</h4>
+            
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400">Ümumi Sahə:</span>
+              <span id="res-area" class="font-bold text-slate-200 font-mono">0.00 m²</span>
+            </div>
+            
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400">Tələb Olunan Panel Sayı:</span>
+              <span id="res-count" class="font-bold text-indigo-400 font-mono text-sm">0 ədəd</span>
+            </div>
+
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400">İsraf ilə Birlikdə Say:</span>
+              <span id="res-total-count" class="font-bold text-emerald-400 font-mono text-sm">0 ədəd</span>
+            </div>
+
+            <div class="flex justify-between items-center text-xs">
+              <span class="text-slate-400">Təxmini Endirim:</span>
+              <span id="res-discount" class="font-bold text-amber-400 font-mono">-0.00 AZN</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-800/90 p-4 rounded-xl border border-emerald-500/30 flex justify-between items-center">
+            <div>
+              <span class="text-[11px] text-slate-400 block">Yekun Smeta Qiyməti</span>
+              <span id="res-final-price" class="text-2xl font-extrabold text-emerald-400 font-mono">0.00 AZN</span>
+            </div>
+            <button onclick="copyEstimateToClipboard()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow">
+              <i class="fa-solid fa-copy"></i>
+              <span>Smetanı Kopyala</span>
+            </button>
+          </div>
         </div>
-        <div id="stat-cash" class="text-xl font-bold text-slate-100">0.00 AZN</div>
-      </div>
-      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm">
-        <div class="flex justify-between items-center text-slate-400 mb-2">
-          <span class="text-xs font-semibold">Kart / Köçürmə</span>
-          <i class="fa-solid fa-credit-card text-blue-400"></i>
-        </div>
-        <div id="stat-card" class="text-xl font-bold text-slate-100">0.00 AZN</div>
-      </div>
-      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm">
-        <div class="flex justify-between items-center text-slate-400 mb-2">
-          <span class="text-xs font-semibold">Xərclər (Rasxod)</span>
-          <i class="fa-solid fa-receipt text-red-400"></i>
-        </div>
-        <div id="stat-expense" class="text-xl font-bold text-red-400">0.00 AZN</div>
-      </div>
-      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm bg-gradient-to-br from-slate-800 to-slate-750">
-        <div class="flex justify-between items-center text-slate-300 mb-2">
-          <span class="text-xs font-bold text-yellow-400">Xalis Gün Sonu Kassası</span>
-          <i class="fa-solid fa-vault text-yellow-400"></i>
-        </div>
-        <div id="stat-total" class="text-xl font-extrabold text-yellow-400">0.00 AZN</div>
-      </div>
-    </div>
-
-    <!-- TAB DÜYMƏLƏRİ -->
-    <div class="flex border-b border-slate-700 space-x-4">
-      <button onclick="switchTab('tab-transactions')" id="btn-tab-transactions" class="pb-2 text-sm font-semibold border-b-2 border-blue-500 text-blue-400 transition flex items-center space-x-2">
-        <i class="fa-solid fa-list-check"></i>
-        <span>Qaimələr və Əməliyyatlar</span>
-      </button>
-      <button onclick="switchTab('tab-stock')" id="btn-tab-stock" class="pb-2 text-sm font-semibold text-slate-400 border-b-2 border-transparent hover:text-slate-200 transition flex items-center space-x-2">
-        <i class="fa-solid fa-boxes-stacked"></i>
-        <span>Məhsul Anbarı / Stok</span>
-      </button>
-      <button onclick="switchTab('tab-customers')" id="btn-tab-customers" class="pb-2 text-sm font-semibold text-slate-400 border-b-2 border-transparent hover:text-slate-200 transition flex items-center space-x-2">
-        <i class="fa-solid fa-users"></i>
-        <span>Müştəri / Təchizatçı Bazası</span>
-      </button>
-    </div>
-
-    <!-- TAB 1: QAİMƏLƏR VƏ ƏMƏLİYYATLAR -->
-    <div id="tab-transactions" class="tab-content bg-slate-800 rounded-xl border border-slate-700 shadow-sm overflow-hidden">
-      <div class="p-4 border-b border-slate-700 flex justify-between items-center">
-        <h2 class="text-sm font-bold flex items-center space-x-2">
-          <i class="fa-solid fa-receipt text-blue-400"></i>
-          <span>Bütün Satış, Mal Qəbulu və Xərc Qaimələri</span>
-        </h2>
-        <span id="record-count" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full font-mono">0 əməliyyat</span>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs text-slate-300">
-          <thead class="bg-slate-900/60 text-slate-400 uppercase font-semibold border-b border-slate-700">
-            <tr>
-              <th class="py-3 px-4">Qaimə No</th>
-              <th class="py-3 px-4">Tarix</th>
-              <th class="py-3 px-4">Əməliyyat Tipi</th>
-              <th class="py-3 px-4">Tərəf (Müştəri/Anbar)</th>
-              <th class="py-3 px-4">Məhsullar</th>
-              <th class="py-3 px-4 text-right">Cəmi AZN</th>
-              <th class="py-3 px-4 text-center">Bax / Çap Et</th>
-            </tr>
-          </thead>
-          <tbody id="transactions-body" class="divide-y divide-slate-700/50 font-mono">
-            <tr><td colspan="7" class="text-center py-8 text-slate-500 font-sans">Heç bir əməliyyat tapılmadı.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- TAB 2: MƏHSUL ANBARI -->
-    <div id="tab-stock" class="tab-content hidden bg-slate-800 rounded-xl border border-slate-700 shadow-sm overflow-hidden">
-      <div class="p-4 border-b border-slate-700 flex justify-between items-center">
-        <h2 class="text-sm font-bold flex items-center space-x-2">
-          <i class="fa-solid fa-boxes-stacked text-blue-400"></i>
-          <span>Məhsul Kataloqu və Anbar Qalıq Hərəkəti</span>
-        </h2>
-        <span id="stock-count" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full font-mono">0 məhsul</span>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs text-slate-300">
-          <thead class="bg-slate-900/60 text-slate-400 uppercase font-semibold border-b border-slate-700">
-            <tr>
-              <th class="py-3 px-4">Kod</th>
-              <th class="py-3 px-4">Məhsulun Adı</th>
-              <th class="py-3 px-4">Anbar</th>
-              <th class="py-3 px-4 text-center">Anbara Gələn</th>
-              <th class="py-3 px-4 text-center">Satılan</th>
-              <th class="py-3 px-4 text-center">Qalıq Stok</th>
-              <th class="py-3 px-4 text-right">Satış Qiyməti</th>
-              <th class="py-3 px-4 text-center">Status</th>
-            </tr>
-          </thead>
-          <tbody id="stock-body" class="divide-y divide-slate-700/50 font-mono">
-            <tr><td colspan="8" class="text-center py-8 text-slate-500 font-sans">Hələ heç bir məhsul əlavə edilməyib.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- TAB 3: MÜŞTƏRİLƏR / TƏCHİZATÇILAR -->
-    <div id="tab-customers" class="tab-content hidden bg-slate-800 rounded-xl border border-slate-700 shadow-sm overflow-hidden">
-      <div class="p-4 border-b border-slate-700 flex justify-between items-center">
-        <h2 class="text-sm font-bold flex items-center space-x-2">
-          <i class="fa-solid fa-users text-purple-400"></i>
-          <span>Müştəri və Təchizatçı Kataloqu</span>
-        </h2>
-        <span id="customer-count" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full font-mono">0 şəxs</span>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs text-slate-300">
-          <thead class="bg-slate-900/60 text-slate-400 uppercase font-semibold border-b border-slate-700">
-            <tr>
-              <th class="py-3 px-4">Ad / Şirkət</th>
-              <th class="py-3 px-4">Əlaqə Nömrəsi</th>
-              <th class="py-3 px-4">Ünvan</th>
-              <th class="py-3 px-4 text-center">Əməliyyat Sayı</th>
-              <th class="py-3 px-4 text-right">Ümumi Dövriyyə</th>
-            </tr>
-          </thead>
-          <tbody id="customers-body" class="divide-y divide-slate-700/50 font-mono">
-            <tr><td colspan="5" class="text-center py-8 text-slate-500 font-sans">Hələ heç bir məlumat əlavə edilməyib.</td></tr>
-          </tbody>
-        </table>
       </div>
     </div>
 
   </main>
 
-  <!-- MODAL 1: SATİŞ QAİMƏSİ -->
-  <div id="modal-sale" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
-      <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-850">
-        <h3 class="font-bold text-sm text-slate-100 flex items-center space-x-2">
-          <i class="fa-solid fa-cart-plus text-green-400 text-base"></i>
-          <span>Yeni Satış Qaiməsi Tərtib Et</span>
-        </h3>
-        <button onclick="closeModal('modal-sale')" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-base"></i></button>
-      </div>
-
-      <form onsubmit="handleMultiSaleSubmit(event)" class="p-4 space-y-4 overflow-y-auto flex-1">
-        <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 space-y-3">
-          <div class="flex justify-between items-center">
-            <label class="text-xs font-bold text-blue-400 uppercase tracking-wider">Müştəri Məlumatı</label>
-            <div class="flex items-center space-x-3 text-xs">
-              <label class="inline-flex items-center space-x-1 cursor-pointer">
-                <input type="radio" name="cust-type" value="existing" checked onchange="toggleCustInput('existing')" class="text-blue-600 focus:ring-0">
-                <span>Mövcud Seç</span>
-              </label>
-              <label class="inline-flex items-center space-x-1 cursor-pointer">
-                <input type="radio" name="cust-type" value="new" onchange="toggleCustInput('new')" class="text-blue-600 focus:ring-0">
-                <span class="text-green-400 font-bold">+ Yeni Müştəri Yaz</span>
-              </label>
-            </div>
-          </div>
-
-          <div id="cust-select-box">
-            <select id="sale-customer-select" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-green-500">
-              <option value="">-- Müştəri Seçin --</option>
-            </select>
-          </div>
-
-          <div id="cust-new-box" class="hidden grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <div>
-              <input type="text" id="new-cust-name" placeholder="Müştəri Adı *" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-green-500">
-            </div>
-            <div>
-              <input type="text" id="new-cust-phone" placeholder="Telefon Nömrəsi" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-green-500">
-            </div>
-            <div>
-              <input type="text" id="new-cust-address" placeholder="Çatdırılma Ünvanı" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-green-500">
-            </div>
-          </div>
-        </div>
-
-        <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 space-y-3">
-          <div class="flex justify-between items-center">
-            <label class="text-xs font-bold text-yellow-400 uppercase tracking-wider">Satılacaq Məhsullar</label>
-            <button type="button" onclick="addSaleProductRow()" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded text-xs font-bold transition flex items-center space-x-1">
-              <i class="fa-solid fa-plus"></i>
-              <span>+ Məhsul Əlavə Et</span>
-            </button>
-          </div>
-          <div id="sale-products-container" class="space-y-2"></div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3 bg-slate-900/80 p-3 rounded-lg border border-slate-700">
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">Ödəniş Tipi</label>
-            <select id="sale-payment-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-green-500">
-              <option value="Nağd">Nağd</option>
-              <option value="Kart">Kart</option>
-              <option value="Köçürmə">Köçürmə</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">CƏM SATİŞ MƏBLƏĞİ</label>
-            <div id="sale-grand-total" class="text-lg font-black text-yellow-400 pt-1">0.00 AZN</div>
-          </div>
-        </div>
-
-        <div class="pt-2 flex justify-end space-x-2">
-          <button type="button" onclick="closeModal('modal-sale')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold">Ləğv Et</button>
-          <button type="submit" class="px-5 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-xs font-bold shadow-lg">Təsdiqlə və Qaimə Yarat</button>
-        </div>
-      </form>
-    </div>
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-slate-800 border border-slate-700 text-slate-100 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3">
+    <div id="toast-icon" class="text-lg"></div>
+    <span id="toast-msg" class="text-xs font-medium"></span>
   </div>
 
-  <!-- MODAL 2: ANBARA MAL QƏBULU QAİMƏSİ -->
-  <div id="modal-stock-in" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
-      <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-850">
-        <h3 class="font-bold text-sm text-slate-100 flex items-center space-x-2">
-          <i class="fa-solid fa-truck-ramp-box text-blue-400 text-base"></i>
-          <span>Anbara Yeni Mal Qəbulu Qaiməsi</span>
-        </h3>
-        <button onclick="closeModal('modal-stock-in')" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark text-base"></i></button>
-      </div>
-
-      <form onsubmit="handleStockInSubmit(event)" class="p-4 space-y-4 overflow-y-auto flex-1">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-900/80 p-3 rounded-lg border border-slate-700">
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">Təchizatçı / Şirkət Adı</label>
-            <input type="text" id="stockin-supplier" placeholder="məs: Mərmər MMC və ya Fabrik" required class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">Daxil Olacaq Anbar</label>
-            <select id="stockin-warehouse" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
-              <option value="Əsas Anbar (Xırdalan Eurohome m.228)">Əsas Anbar (Eurohome m.228)</option>
-              <option value="Anbar 2 (Filial)">Anbar 2 (Filial)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-700 space-y-3">
-          <div class="flex justify-between items-center">
-            <label class="text-xs font-bold text-blue-400 uppercase tracking-wider">Qəbul Ediləcək Məhsullar</label>
-            <button type="button" onclick="addStockInRow()" class="bg-blue-600 hover:bg-blue-500 text-white px-2.5 py-1 rounded text-xs font-bold transition flex items-center space-x-1">
-              <i class="fa-solid fa-plus"></i>
-              <span>+ Məhsul Əlavə Et</span>
-            </button>
-          </div>
-          <div id="stockin-products-container" class="space-y-2"></div>
-        </div>
-
-        <div class="flex justify-between items-center bg-slate-900/80 p-3 rounded-lg border border-slate-700">
-          <span class="text-xs font-bold text-slate-400">ÜMUMİ MAL QƏBULU MƏBLƏĞİ:</span>
-          <span id="stockin-grand-total" class="text-lg font-black text-blue-400">0.00 AZN</span>
-        </div>
-
-        <div class="pt-2 flex justify-end space-x-2">
-          <button type="button" onclick="closeModal('modal-stock-in')" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold">Ləğv Et</button>
-          <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold shadow-lg">Təsdiqlə və Anbara Qəbul Et</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL 3: RASXOD -->
-  <div id="modal-expense" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md overflow-hidden shadow-2xl">
-      <div class="p-4 border-b border-slate-700 flex justify-between items-center">
-        <h3 class="font-bold text-sm text-slate-100 flex items-center space-x-2">
-          <i class="fa-solid fa-minus-circle text-red-400"></i>
-          <span>+ Xərc (Rasxod) Qeyd Et</span>
-        </h3>
-        <button onclick="closeModal('modal-expense')" class="text-slate-400 hover:text-slate-200"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <form onsubmit="handleAddExpense(event)" class="p-4 space-y-3">
-        <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Xərcin Məzmunu / Təfərrüatı</label>
-          <input type="text" id="exp-title" placeholder="məs: Təmir, Yanacaq, İcarə..." required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-red-500">
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">Məbləğ (AZN)</label>
-            <input type="number" step="0.01" id="exp-amount" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-red-500">
-          </div>
-          <div>
-            <label class="block text-xs font-medium text-slate-400 mb-1">Məsul Şəxs / Kassa</label>
-            <input type="text" id="exp-person" placeholder="məs: Kassa" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-red-500">
-          </div>
-        </div>
-        <div class="pt-2 flex justify-end space-x-2">
-          <button type="button" onclick="closeModal('modal-expense')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-semibold">Ləğv Et</button>
-          <button type="submit" class="px-4 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-semibold">Xərci Qeyd Et</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL 4: QAİMƏ VƏ ÇEK ÇAP PƏNCƏRƏSİ -->
-  <div id="modal-receipt" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-    <div class="bg-white text-slate-900 rounded-xl w-full max-w-lg overflow-hidden shadow-2xl p-6 relative">
-      <button onclick="closeModal('modal-receipt')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 no-print">
-        <i class="fa-solid fa-xmark text-xl"></i>
-      </button>
-
-      <div id="printable-receipt" class="space-y-4 font-sans text-xs">
-        <div class="text-center border-b pb-3 border-slate-200">
-          <h2 class="text-2xl font-black tracking-wider uppercase text-slate-800">DecorConcept</h2>
-          <p class="text-[11px] text-slate-600 font-medium">İnteryer və Dekorasiya Mərkəzi</p>
-          <p class="text-[11px] text-slate-600">Ünvan: Xırdalan, Eurohome mağaza 228</p>
-          <p class="text-[11px] text-slate-800 font-bold">Əlaqə / Whatsapp: 055 203 22 71</p>
-        </div>
-
-        <div class="flex justify-between items-start text-[11px] bg-slate-50 p-2.5 rounded border border-slate-100">
-          <div>
-            <p><strong>Tərəf / Şəxs:</strong> <span id="rec-cust-name">-</span></p>
-            <p><strong>Əlaqə:</strong> <span id="rec-cust-phone">-</span></p>
-            <p><strong>Ünvan / Anbar:</strong> <span id="rec-cust-address">-</span></p>
-          </div>
-          <div class="text-right">
-            <p><strong>Qaimə No:</strong> <span id="rec-no" class="font-mono font-bold">-</span></p>
-            <p><strong>Tarix:</strong> <span id="rec-date">-</span></p>
-            <p><strong>Tipi:</strong> <span id="rec-type-badge" class="font-bold">-</span></p>
-          </div>
-        </div>
-
-        <table class="w-full text-left border-collapse border border-slate-200 text-[11px]">
-          <thead>
-            <tr class="bg-slate-100 text-slate-700">
-              <th class="border border-slate-200 p-1.5">Məhsulun Adı</th>
-              <th class="border border-slate-200 p-1.5 text-center">Say</th>
-              <th class="border border-slate-200 p-1.5 text-right">Qiymət</th>
-              <th class="border border-slate-200 p-1.5 text-right">Cəmi</th>
-            </tr>
-          </thead>
-          <tbody id="rec-items-body"></tbody>
-        </table>
-
-        <div class="flex justify-between items-center text-sm font-bold border-t pt-2 border-slate-300">
-          <span>YEKUN QAİMƏ MƏBLƏĞİ:</span>
-          <span id="rec-grand-total" class="text-base text-slate-900">0.00 AZN</span>
-        </div>
-
-        <div class="text-center pt-2 text-[10px] text-slate-500 border-t border-slate-100">
-          <p>DecorConcept — Evinizə dəyər qatırıq.</p>
-        </div>
-      </div>
-
-      <div class="mt-6 flex justify-end space-x-2 no-print border-t pt-3">
-        <button onclick="closeModal('modal-receipt')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded-lg text-xs font-semibold">Bağla</button>
-        <button onclick="window.print()" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow">
-          <i class="fa-solid fa-print"></i>
-          <span>🖨️ Qaiməni Çap Et / PDF</span>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- JS SKRİPT -->
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXgk0KvtAy7LHhCpC3pmDF84IBvJqhLODdJzKJIJnEVKNvzRnU_9uohpANjuoMS_o/exec";
-
-    let state = {
-      products: [],
-      customers: [],
-      transactions: []
-    };
-
-    function initData() {
-      const saved = localStorage.getItem('decorconcept_state');
-      if (saved) {
-        state = JSON.parse(saved);
-      }
-      populateDropdowns();
-      renderAll();
-    }
-
-    function saveState() {
-      localStorage.setItem('decorconcept_state', JSON.stringify(state));
-      populateDropdowns();
-      renderAll();
-    }
-
-    function showToast(msg) {
-      const toast = document.getElementById('toast');
-      document.getElementById('toast-msg').innerText = msg;
-      toast.classList.remove('hidden');
-      setTimeout(() => { toast.classList.add('hidden'); }, 3000);
-    }
-
-    function saveAndConfirmAll() {
-      saveState();
-      showToast("Bütün məlumatlar onaylandı və yadda saxlanıldı!");
-    }
-
-    function populateDropdowns() {
-      const custSelect = document.getElementById('sale-customer-select');
-      const filterCust = document.getElementById('filter-customer');
-      
-      custSelect.innerHTML = '<option value="">-- Müştəri Seçin --</option>';
-      filterCust.innerHTML = '<option value="">Hamısı</option>';
-      
-      state.customers.forEach(c => {
-        custSelect.innerHTML += `<option value="${c.name}">${c.name} (${c.phone || '-'})</option>`;
-        filterCust.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-      });
-    }
-
-    function toggleCustInput(type) {
-      if (type === 'existing') {
-        document.getElementById('cust-select-box').classList.remove('hidden');
-        document.getElementById('cust-new-box').classList.add('hidden');
-      } else {
-        document.getElementById('cust-select-box').classList.add('hidden');
-        document.getElementById('cust-new-box').classList.remove('hidden');
-      }
-    }
-
-    // SATİŞ SƏTİRLƏRİ
-    function addSaleProductRow() {
-      const container = document.getElementById('sale-products-container');
-      const rowId = 'p-row-' + Date.now();
-      
-      let optionsHtml = '<option value="">-- Məhsul Seçin --</option>';
-      state.products.forEach(p => {
-        optionsHtml += `<option value="${p.name}">${p.name} (Stok: ${p.stock - p.sold})</option>`;
-      });
-
-      const rowHtml = `
-        <div id="${rowId}" class="flex items-center space-x-2 bg-slate-800 p-2 rounded-lg border border-slate-700">
-          <select class="prod-select flex-1 bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-200" required onchange="updateSaleRowPrice('${rowId}')">
-            ${optionsHtml}
-          </select>
-          <input type="number" min="1" value="1" class="prod-qty w-16 bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-200 text-center" required oninput="calcMultiSaleTotal()">
-          <input type="number" step="0.01" placeholder="Qiymət" class="prod-price w-24 bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-200 text-right" required oninput="calcMultiSaleTotal()">
-          <span class="prod-total text-xs font-bold text-yellow-400 w-20 text-right">0.00 AZN</span>
-          <button type="button" onclick="removeSaleRow('${rowId}')" class="text-red-400 p-1"><i class="fa-solid fa-trash"></i></button>
-        </div>
-      `;
-      container.insertAdjacentHTML('beforeend', rowHtml);
-      calcMultiSaleTotal();
-    }
-
-    function updateSaleRowPrice(rowId) {
-      const row = document.getElementById(rowId);
-      const prodName = row.querySelector('.prod-select').value;
-      const priceInput = row.querySelector('.prod-price');
-      const prod = state.products.find(p => p.name === prodName);
-      if (prod) priceInput.value = prod.price;
-      calcMultiSaleTotal();
-    }
-
-    function removeSaleRow(rowId) {
-      const container = document.getElementById('sale-products-container');
-      if (container.children.length > 1) {
-        document.getElementById(rowId).remove();
-        calcMultiSaleTotal();
-      }
-    }
-
-    function calcMultiSaleTotal() {
-      let grandTotal = 0;
-      document.querySelectorAll('#sale-products-container > div').forEach(r => {
-        const qty = parseFloat(r.querySelector('.prod-qty').value) || 0;
-        const price = parseFloat(r.querySelector('.prod-price').value) || 0;
-        const rowTotal = qty * price;
-        r.querySelector('.prod-total').innerText = rowTotal.toFixed(2) + " AZN";
-        grandTotal += rowTotal;
-      });
-      document.getElementById('sale-grand-total').innerText = grandTotal.toFixed(2) + " AZN";
-    }
-
-    // MAL QƏBULU SƏTİRLƏRİ
-    function addStockInRow() {
-      const container = document.getElementById('stockin-products-container');
-      const rowId = 'in-row-' + Date.now();
-
-      const rowHtml = `
-        <div id="${rowId}" class="flex items-center space-x-2 bg-slate-800 p-2 rounded-lg border border-slate-700">
-          <input type="text" placeholder="Məhsul Adı *" class="in-prod-name flex-1 bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-200" required>
-          <input type="number" min="1" value="10" placeholder="Say" class="in-prod-qty w-20 bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-200 text-center" required oninput="calcStockInTotal()">
-          <input type="number" step="0.01" placeholder="Satış Qiyməti *" class="in-prod-price w-28 bg-slate-900 border border-slate-700 rounded p-1.5 text-xs text-slate-200 text-right" required oninput="calcStockInTotal()">
-          <button type="button" onclick="removeStockInRow('${rowId}')" class="text-red-400 p-1"><i class="fa-solid fa-trash"></i></button>
-        </div>
-      `;
-      container.insertAdjacentHTML('beforeend', rowHtml);
-      calcStockInTotal();
-    }
-
-    function removeStockInRow(rowId) {
-      const container = document.getElementById('stockin-products-container');
-      if (container.children.length > 1) {
-        document.getElementById(rowId).remove();
-        calcStockInTotal();
-      }
-    }
-
-    function calcStockInTotal() {
-      let grandTotal = 0;
-      document.querySelectorAll('#stockin-products-container > div').forEach(r => {
-        const qty = parseFloat(r.querySelector('.in-prod-qty').value) || 0;
-        const price = parseFloat(r.querySelector('.in-prod-price').value) || 0;
-        grandTotal += (qty * price);
-      });
-      document.getElementById('stockin-grand-total').innerText = grandTotal.toFixed(2) + " AZN";
-    }
-
-    // Modal İdarəsi
-    function openModal(id) {
-      document.getElementById(id).classList.remove('hidden');
-      document.getElementById(id).classList.add('flex');
-      if (id === 'modal-sale') {
-        document.getElementById('sale-products-container').innerHTML = '';
-        addSaleProductRow();
-      } else if (id === 'modal-stock-in') {
-        document.getElementById('stockin-products-container').innerHTML = '';
-        addStockInRow();
-      }
-    }
-    function closeModal(id) {
-      document.getElementById(id).classList.add('hidden');
-      document.getElementById(id).classList.remove('flex');
-    }
-
-    // SATİŞI QEYD ET
-    async function handleMultiSaleSubmit(e) {
-      e.preventDefault();
-      const custType = document.querySelector('input[name="cust-type"]:checked').value;
-      let customerName = "", customerPhone = "-", customerAddress = "-";
-
-      if (custType === 'existing') {
-        customerName = document.getElementById('sale-customer-select').value;
-        const custObj = state.customers.find(c => c.name === customerName);
-        if (custObj) { customerPhone = custObj.phone; customerAddress = custObj.address || "-"; }
-      } else {
-        customerName = document.getElementById('new-cust-name').value.trim();
-        customerPhone = document.getElementById('new-cust-phone').value.trim() || "-";
-        customerAddress = document.getElementById('new-cust-address').value.trim() || "-";
-
-        if (!customerName) { alert("Xahiş olunur müştəri adını yazın!"); return; }
-        if (!state.customers.some(c => c.name === customerName)) {
-          state.customers.push({ id: 'CUST-' + (state.customers.length + 1), name: customerName, phone: customerPhone, address: customerAddress });
-        }
-      }
-
-      const rows = document.querySelectorAll('#sale-products-container > div');
-      const itemsList = [];
-      let grandTotal = 0;
-
-      rows.forEach(r => {
-        const pName = r.querySelector('.prod-select').value;
-        const qty = parseInt(r.querySelector('.prod-qty').value) || 1;
-        const price = parseFloat(r.querySelector('.prod-price').value) || 0;
-        const total = qty * price;
-
-        if (pName) {
-          itemsList.push({ name: pName, qty, price, total });
-          grandTotal += total;
-          const prod = state.products.find(p => p.name === pName);
-          if (prod) prod.sold += qty;
-        }
-      });
-
-      const paymentType = document.getElementById('sale-payment-type').value;
-      const date = new Date().toISOString().split('T')[0];
-      const receiptNo = 'QAİME-' + Math.floor(100000 + Math.random() * 900000);
-
-      const transactionObj = {
-        receiptNo, date, type: 'Satış', customer: customerName, phone: customerPhone, address: customerAddress,
-        items: itemsList, paymentType, total: grandTotal.toFixed(2)
-      };
-
-      state.transactions.unshift(transactionObj);
-      saveState();
-      closeModal('modal-sale');
-      showToast("Satış vuruldu və qaimə hazırlandı!");
-      openReceipt(receiptNo);
-    }
-
-    // ANBARA MAL QƏBULUNU QEYD ET
-    async function handleStockInSubmit(e) {
-      e.preventDefault();
-      const supplier = document.getElementById('stockin-supplier').value.trim();
-      const warehouse = document.getElementById('stockin-warehouse').value;
-
-      const rows = document.querySelectorAll('#stockin-products-container > div');
-      const itemsList = [];
-      let grandTotal = 0;
-
-      rows.forEach(r => {
-        const pName = r.querySelector('.in-prod-name').value.trim();
-        const qty = parseInt(r.querySelector('.in-prod-qty').value) || 1;
-        const price = parseFloat(r.querySelector('.in-prod-price').value) || 0;
-        const total = qty * price;
-
-        if (pName) {
-          itemsList.push({ name: pName, qty, price, total });
-          grandTotal += total;
-
-          let prod = state.products.find(p => p.name === pName);
-          if (prod) {
-            prod.stock += qty;
-            prod.price = price;
-          } else {
-            state.products.push({
-              id: 'PRD-' + (state.products.length + 1),
-              name: pName, cat: warehouse, stock: qty, sold: 0, price: price
-            });
-          }
-        }
-      });
-
-      const date = new Date().toISOString().split('T')[0];
-      const receiptNo = 'QƏBUL-' + Math.floor(100000 + Math.random() * 900000);
-
-      const stockInObj = {
-        receiptNo, date, type: 'Mal Qəbulu', customer: supplier, phone: '-', address: warehouse,
-        items: itemsList, paymentType: 'Giriş', total: grandTotal.toFixed(2)
-      };
-
-      state.transactions.unshift(stockInObj);
-      saveState();
-      closeModal('modal-stock-in');
-      showToast("Mal qəbulu anbara vuruldu və qaimə yaradıldı!");
-      openReceipt(receiptNo);
-    }
-
-    // RASXOD
-    async function handleAddExpense(e) {
-      e.preventDefault();
-      const title = document.getElementById('exp-title').value;
-      const amount = parseFloat(document.getElementById('exp-amount').value) || 0;
-      const person = document.getElementById('exp-person').value || 'Kassa';
-      const date = new Date().toISOString().split('T')[0];
-
-      const expenseObj = {
-        receiptNo: 'XƏRC-' + Math.floor(1000 + Math.random() * 9000),
-        date, type: 'Məxaric (Xərc)', customer: person, phone: '-', address: 'Kassa',
-        items: [{ name: title, qty: 1, price: amount, total: amount }],
-        paymentType: 'Nağd', total: amount.toFixed(2)
-      };
-
-      state.transactions.unshift(expenseObj);
-      saveState();
-      closeModal('modal-expense');
-      e.target.reset();
-      showToast("Xərc (Rasxod) qeyd edildi!");
-    }
-
-    // QAİMƏYƏ BAXMAQ VƏ ÇAP ETMƏK
-    function openReceipt(receiptNo) {
-      const tx = state.transactions.find(t => t.receiptNo === receiptNo);
-      if (!tx) return;
-
-      document.getElementById('rec-cust-name').innerText = tx.customer;
-      document.getElementById('rec-cust-phone').innerText = tx.phone || '-';
-      document.getElementById('rec-cust-address').innerText = tx.address || '-';
-      document.getElementById('rec-no').innerText = tx.receiptNo;
-      document.getElementById('rec-date').innerText = tx.date;
-      document.getElementById('rec-type-badge').innerText = tx.type;
-      document.getElementById('rec-grand-total').innerText = tx.total + " AZN";
-
-      const itemsBody = document.getElementById('rec-items-body');
-      itemsBody.innerHTML = '';
-
-      if (tx.items && tx.items.length > 0) {
-        tx.items.forEach(it => {
-          itemsBody.innerHTML += `
-            <tr>
-              <td class="border border-slate-200 p-1.5 font-bold">${it.name}</td>
-              <td class="border border-slate-200 p-1.5 text-center">${it.qty}</td>
-              <td class="border border-slate-200 p-1.5 text-right">${it.price.toFixed(2)} AZN</td>
-              <td class="border border-slate-200 p-1.5 text-right font-bold">${it.total.toFixed(2)} AZN</td>
-            </tr>
-          `;
-        });
-      }
-
-      openModal('modal-receipt');
-    }
-
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.getElementById(tabId).classList.remove('hidden');
-
-      ['transactions', 'stock', 'customers'].forEach(t => {
-        const btn = document.getElementById('btn-tab-' + t);
-        if ('tab-' + t === tabId) {
-          btn.className = 'pb-2 text-sm font-semibold border-b-2 border-blue-500 text-blue-400 transition flex items-center space-x-2';
-        } else {
-          btn.className = 'pb-2 text-sm font-semibold text-slate-400 border-b-2 border-transparent hover:text-slate-200 transition flex items-center space-x-2';
-        }
-      });
-    }
-
-    function resetFilters() {
-      document.getElementById('filter-date').value = '';
-      document.getElementById('filter-customer').value = '';
-      document.getElementById('filter-type').value = '';
-      document.getElementById('filter-search').value = '';
-      applyFilters();
-    }
-
-    function applyFilters() { renderAll(); }
-
-    function renderAll() {
-      const filterDate = document.getElementById('filter-date').value;
-      const filterCust = document.getElementById('filter-customer').value;
-      const filterType = document.getElementById('filter-type').value;
-      const filterSearch = document.getElementById('filter-search').value.toLowerCase();
-
-      let filteredTx = state.transactions.filter(t => {
-        if (filterDate && t.date !== filterDate) return false;
-        if (filterCust && t.customer !== filterCust) return false;
-        if (filterType && t.type !== filterType) return false;
-        if (filterSearch) {
-          const match = (t.customer + ' ' + t.type + ' ' + (t.receiptNo || '')).toLowerCase();
-          if (!match.includes(filterSearch)) return false;
-        }
-        return true;
-      });
-
-      let cashTotal = 0, cardTotal = 0, expTotal = 0;
-
-      filteredTx.forEach(t => {
-        const amt = parseFloat(t.total) || 0;
-        if (t.type === 'Məxaric (Xərc)') {
-          expTotal += amt;
-        } else if (t.type === 'Satış') {
-          if (t.paymentType === 'Kart' || t.paymentType === 'Köçürmə') cardTotal += amt;
-          else cashTotal += amt;
-        }
-      });
-
-      document.getElementById('stat-cash').innerText = cashTotal.toFixed(2) + " AZN";
-      document.getElementById('stat-card').innerText = cardTotal.toFixed(2) + " AZN";
-      document.getElementById('stat-expense').innerText = expTotal.toFixed(2) + " AZN";
-      document.getElementById('stat-total').innerText = ((cashTotal + cardTotal) - expTotal).toFixed(2) + " AZN";
-
-      const txBody = document.getElementById('transactions-body');
-      document.getElementById('record-count').innerText = `${filteredTx.length} əməliyyat`;
-      
-      if (filteredTx.length === 0) {
-        txBody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-500 font-sans">Heç bir əməliyyat tapılmadı.</td></tr>`;
-      } else {
-        txBody.innerHTML = '';
-        filteredTx.forEach(item => {
-          const isExp = item.type === 'Məxaric (Xərc)';
-          const isStockIn = item.type === 'Mal Qəbulu';
-          const itemsSummary = item.items ? item.items.map(i => `${i.name} (${i.qty} əd)`).join(', ') : '-';
-          
-          let badgeClass = 'bg-green-900/60 text-green-300';
-          if (isExp) badgeClass = 'bg-red-900/60 text-red-300';
-          if (isStockIn) badgeClass = 'bg-blue-900/60 text-blue-300';
-
-          txBody.innerHTML += `
-            <tr class="hover:bg-slate-700/30 transition">
-              <td class="py-2.5 px-4 font-mono font-bold text-yellow-400">${item.receiptNo || '-'}</td>
-              <td class="py-2.5 px-4 text-slate-400">${item.date}</td>
-              <td class="py-2.5 px-4">
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">
-                  ${item.type}
-                </span>
-              </td>
-              <td class="py-2.5 px-4 font-semibold text-slate-200">${item.customer}</td>
-              <td class="py-2.5 px-4 text-slate-300">${itemsSummary}</td>
-              <td class="py-2.5 px-4 text-right font-bold ${isExp ? 'text-red-400' : (isStockIn ? 'text-blue-400' : 'text-slate-100')}">${item.total} AZN</td>
-              <td class="py-2.5 px-4 text-center">
-                <button onclick="openReceipt('${item.receiptNo}')" class="bg-blue-600/80 hover:bg-blue-500 text-white px-2.5 py-1 rounded text-[11px] font-bold transition flex items-center space-x-1 mx-auto">
-                  <i class="fa-solid fa-receipt"></i> <span>📄 Qaimə / Çek</span>
-                </button>
-              </td>
-            </tr>
-          `;
-        });
-      }
-
-      // Cədvəl 2: Stok
-      const stockBody = document.getElementById('stock-body');
-      document.getElementById('stock-count').innerText = `${state.products.length} məhsul`;
-      
-      if (state.products.length === 0) {
-        stockBody.innerHTML = `<tr><td colspan="8" class="text-center py-8 text-slate-500 font-sans">Hələ heç bir məhsul əlavə edilməyib.</td></tr>`;
-      } else {
-        stockBody.innerHTML = '';
-        state.products.forEach(p => {
-          const rem = p.stock - p.sold;
-          const isCritical = rem <= 10;
-          stockBody.innerHTML += `
-            <tr class="hover:bg-slate-700/30 transition">
-              <td class="py-2.5 px-4 text-slate-400">${p.id}</td>
-              <td class="py-2.5 px-4 font-bold text-slate-200">${p.name}</td>
-              <td class="py-2.5 px-4 text-slate-400">${p.cat || 'Əsas Anbar'}</td>
-              <td class="py-2.5 px-4 text-center text-blue-400 font-bold">${p.stock}</td>
-              <td class="py-2.5 px-4 text-center text-yellow-400 font-bold">${p.sold}</td>
-              <td class="py-2.5 px-4 text-center font-bold ${isCritical ? 'text-red-400' : 'text-green-400'}">${rem}</td>
-              <td class="py-2.5 px-4 text-right font-bold text-slate-100">${p.price.toFixed(2)} AZN</td>
-              <td class="py-2.5 px-4 text-center">
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isCritical ? 'bg-red-900/60 text-red-300' : 'bg-green-900/60 text-green-300'}">
-                  ${isCritical ? 'Kritik Az' : 'Kafi'}
-                </span>
-              </td>
-            </tr>
-          `;
-        });
-      }
-
-      // Cədvəl 3: Müştərilər
-      const custBody = document.getElementById('customers-body');
-      document.getElementById('customer-count').innerText = `${state.customers.length} şəxs`;
-      
-      if (state.customers.length === 0) {
-        custBody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-500 font-sans">Hələ heç bir məlumat əlavə edilməyib.</td></tr>`;
-      } else {
-        custBody.innerHTML = '';
-        state.customers.forEach(c => {
-          const cTx = state.transactions.filter(t => t.customer === c.name);
-          const orderCount = cTx.length;
-          const totalAmt = cTx.reduce((sum, t) => sum + (parseFloat(t.total) || 0), 0);
-
-          custBody.innerHTML += `
-            <tr class="hover:bg-slate-700/30 transition">
-              <td class="py-2.5 px-4 font-bold text-slate-200">${c.name}</td>
-              <td class="py-2.5 px-4 text-slate-400">${c.phone || '-'}</td>
-              <td class="py-2.5 px-4 text-slate-400">${c.address || '-'}</td>
-              <td class="py-2.5 px-4 text-center">${orderCount}</td>
-              <td class="py-2.5 px-4 text-right font-bold text-yellow-400">${totalAmt.toFixed(2)} AZN</td>
-            </tr>
-          `;
-        });
-      }
-    }
-
-    async function fetchSheetData() {
-      try {
-        const res = await fetch(SCRIPT_URL, { redirect: "follow" });
-        if (res.ok) {
-          const data = await res.json();
-          if (data.products && data.products.length > 0) state.products = data.products;
-          if (data.customers && data.customers.length > 0) state.customers = data.customers;
-          if (data.transactions && data.transactions.length > 0) state.transactions = data.transactions;
-          saveState();
-        }
-      } catch (err) {}
-    }
+    const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyp_oDoZ3vznDKLrfHd0-sJiBA0Oi53doZFj_wrJhyecPHGfUO1hqoT21QJuUd-jxL8uQ/exec";
 
     document.addEventListener("DOMContentLoaded", () => {
-      initData();
-      fetchSheetData();
+      calculateMaterial();
     });
+
+    // Tab switcher logic
+    function showSheetTab(tabId) {
+      document.querySelectorAll('.sheet-tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.sheet-tab-btn').forEach(btn => {
+        btn.classList.remove('bg-indigo-600', 'text-white');
+        btn.classList.add('text-slate-400');
+      });
+
+      document.getElementById(tabId).classList.remove('hidden');
+      const activeBtn = document.getElementById('btn-sheet-' + tabId.replace('tab-', ''));
+      activeBtn.classList.add('bg-indigo-600', 'text-white');
+      activeBtn.classList.remove('text-slate-400');
+    }
+
+    // Smooth Scroll
+    function scrollToSection(id) {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Material & Price Calculation
+    function calculateMaterial() {
+      const width = parseFloat(document.getElementById('calc-width').value) || 0;
+      const height = parseFloat(document.getElementById('calc-height').value) || 0;
+      const waste = parseFloat(document.getElementById('calc-waste').value) || 0;
+      const discount = parseFloat(document.getElementById('calc-discount').value) || 0;
+
+      const prodSelect = document.getElementById('calc-product');
+      const selectedOpt = prodSelect.options[prodSelect.selectedIndex];
+
+      const pWidth = parseFloat(selectedOpt.dataset.w) || 1;
+      const pHeight = parseFloat(selectedOpt.dataset.h) || 1;
+      const unitPrice = parseFloat(selectedOpt.dataset.price) || 0;
+
+      const area = width * height;
+      const panelArea = pWidth * pHeight;
+
+      let netCount = Math.ceil(area / panelArea);
+      if (isNaN(netCount) || netCount < 0) netCount = 0;
+
+      const totalCount = Math.ceil(netCount * (1 + waste / 100));
+      const rawPrice = totalCount * unitPrice;
+      const discountAmount = rawPrice * (discount / 100);
+      const finalPrice = Math.max(0, rawPrice - discountAmount);
+
+      document.getElementById('res-area').innerText = area.toFixed(2) + " m²";
+      document.getElementById('res-count').innerText = netCount + " ədəd";
+      document.getElementById('res-total-count').innerText = totalCount + " ədəd";
+      document.getElementById('res-discount').innerText = "-" + discountAmount.toFixed(2) + " AZN";
+      document.getElementById('res-final-price').innerText = finalPrice.toFixed(2) + " AZN";
+    }
+
+    // Copying Web App URL
+    function copyWebAppUrl() {
+      copyToClipboard(GOOGLE_WEB_APP_URL);
+      showToast("Web App URL kopyalandı!", "success");
+    }
+
+    // Copying Script Code
+    function copyScriptCode() {
+      const code = document.getElementById('apps-script-code').innerText;
+      copyToClipboard(code);
+      showToast("Apps Script kodu kopyalandı!", "success");
+    }
+
+    // Copying Header Row
+    function copyHeaderRow(text) {
+      copyToClipboard(text);
+      showToast("Sütun başlıqları kopyalandı!", "success");
+    }
+
+    // Copying Estimate
+    function copyEstimateToClipboard() {
+      const area = document.getElementById('res-area').innerText;
+      const count = document.getElementById('res-total-count').innerText;
+      const price = document.getElementById('res-final-price').innerText;
+      
+      const summary = `DivarPanel Smeta:\nSahə: ${area}\nTələb Olunan Məhsul: ${count}\nYekun Qiymət: ${price}\nURL: ${GOOGLE_WEB_APP_URL}`;
+      copyToClipboard(summary);
+      showToast("Smeta məlumatları kopyalandı!", "success");
+    }
+
+    // Helper: Clipboard Execution
+    function copyToClipboard(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.warn('Copy failed', err);
+      }
+      document.body.removeChild(textarea);
+    }
+
+    // Toast Notification
+    function showToast(message, type = "info") {
+      const toast = document.getElementById("toast");
+      const msgEl = document.getElementById("toast-msg");
+      const iconEl = document.getElementById("toast-icon");
+
+      msgEl.innerText = message;
+
+      if (type === "success") {
+        iconEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i>`;
+      } else {
+        iconEl.innerHTML = `<i class="fa-solid fa-circle-info text-indigo-400"></i>`;
+      }
+
+      toast.classList.remove("translate-y-20", "opacity-0");
+      toast.classList.add("translate-y-0", "opacity-100");
+
+      setTimeout(() => {
+        toast.classList.remove("translate-y-0", "opacity-100");
+        toast.classList.add("translate-y-20", "opacity-0");
+      }, 3000);
+    }
   </script>
 </body>
 </html>
