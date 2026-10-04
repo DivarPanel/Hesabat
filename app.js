@@ -196,21 +196,28 @@ async function processStockIn() {
 }
 
 async function processExpense() {
-  const desc = document.getElementById('expDesc').value;
+  const desc = document.getElementById('expDesc').value.trim();
   const amount = parseFloat(document.getElementById('expAmount').value);
-  if (!desc || !amount) return alert("Məlumatları doldurun!");
+  
+  if (!desc || isNaN(amount) || amount <= 0) {
+    alert("Zəhmət olmasa düzgün təyinat və məbləğ daxil edin!");
+    return;
+  }
 
   const payload = {
     action: "ADD_EXPENSE",
     date: new Date().toLocaleString('az-AZ'),
-    user: currentUser.name, description: desc, amount: amount,
+    user: currentUser.name, 
+    description: desc, 
+    amount: amount,
     paymentType: document.getElementById('expMethod').value
   };
 
-  await sendToGoogleSheets(payload);
   closeModal('expenseModal');
   document.getElementById('expDesc').value = '';
   document.getElementById('expAmount').value = '';
+
+  await sendToGoogleSheets(payload);
 }
 
 async function sendToGoogleSheets(payload) {
