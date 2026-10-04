@@ -1,168 +1,1014 @@
 <!DOCTYPE html>
-<html lang="az">
+<html lang="az" class="h-full bg-slate-900">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Eurohome - Gün Sonu və Əməliyyat Paneli</title>
-  <!-- Tailwind CSS -->
+  <title>Eurohome — İdarəetmə Paneli</title>
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"/>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Scrollbar for dark theme */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-screen">
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col antialiased">
 
   <!-- Header / Başlıq -->
-  <header class="bg-slate-800 border-b border-slate-700 p-4 sticky top-0 z-50 shadow-md">
-    <div class="max-w-7xl mx-auto flex justify-between items-center">
+  <header class="bg-slate-800 border-b border-slate-700/80 sticky top-0 z-40 shadow-lg backdrop-blur-md bg-opacity-90">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
       <div class="flex items-center space-x-3">
-        <i class="fa-solid fa-store text-2xl text-blue-400"></i>
-        <h1 class="text-xl font-bold tracking-wide">Eurohome — İdarəetmə Paneli</h1>
+        <div class="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 shadow-inner">
+          <i class="fa-solid fa-store text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            Eurohome
+            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">v2.4 PRO</span>
+          </h1>
+          <p class="text-xs text-slate-400">Gün Sonu və Əməliyyat İdarəetmə Paneli</p>
+        </div>
       </div>
-      <button onclick="fetchSheetData()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm font-semibold transition flex items-center space-x-2">
-        <i class="fa-solid fa-rotate"></i>
-        <span>Yenilə</span>
-      </button>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <button onclick="openModal('modal-sale')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center space-x-2 shadow-md shadow-emerald-900/20 active:scale-95">
+          <i class="fa-solid fa-cart-plus"></i>
+          <span class="hidden sm:inline">Yeni Satış</span>
+        </button>
+        <button onclick="openModal('modal-expense')" class="bg-rose-600 hover:bg-rose-500 text-white px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center space-x-2 shadow-md shadow-rose-900/20 active:scale-95">
+          <i class="fa-solid fa-minus-circle"></i>
+          <span class="hidden sm:inline">Yeni Xərc</span>
+        </button>
+        <button onclick="openModal('modal-settings')" title="Google Script Ayarları" class="bg-slate-700 hover:bg-slate-600 text-slate-200 p-2.5 rounded-lg text-sm transition border border-slate-600">
+          <i class="fa-solid fa-gear"></i>
+        </button>
+        <button onclick="fetchSheetData()" class="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center space-x-2 shadow-md shadow-blue-900/20 active:scale-95">
+          <i class="fa-solid fa-rotate" id="refresh-icon"></i>
+          <span>Yenilə</span>
+        </button>
+      </div>
     </div>
   </header>
 
   <!-- Əsas Konteynir -->
-  <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 flex-1 w-full">
 
     <!-- KPI / Gün Sonu Statistikaları -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      
+      <!-- Nağd Satış -->
+      <div class="bg-slate-800 p-5 rounded-xl border border-slate-700/80 shadow-md hover:border-slate-600 transition group">
         <div class="flex justify-between items-center text-slate-400 mb-2">
-          <span class="text-sm font-medium">Nağd Satış</span>
-          <i class="fa-solid fa-money-bill-wave text-green-400"></i>
+          <span class="text-xs font-semibold uppercase tracking-wider">Nağd Satış</span>
+          <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform">
+            <i class="fa-solid fa-money-bill-wave"></i>
+          </div>
         </div>
-        <div id="stat-cash" class="text-2xl font-bold text-slate-100">0.00 AZN</div>
+        <div id="stat-cash" class="text-2xl font-bold text-slate-100 font-mono">0.00 AZN</div>
+        <p class="text-[11px] text-slate-400 mt-1">Kassaya gələn nağd</p>
       </div>
 
-      <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm">
+      <!-- Kart Satışı -->
+      <div class="bg-slate-800 p-5 rounded-xl border border-slate-700/80 shadow-md hover:border-slate-600 transition group">
         <div class="flex justify-between items-center text-slate-400 mb-2">
-          <span class="text-sm font-medium">Kart Satışı</span>
-          <i class="fa-solid fa-credit-card text-blue-400"></i>
+          <span class="text-xs font-semibold uppercase tracking-wider">Kart Satışı</span>
+          <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-400 group-hover:scale-110 transition-transform">
+            <i class="fa-solid fa-credit-card"></i>
+          </div>
         </div>
-        <div id="stat-card" class="text-2xl font-bold text-slate-100">0.00 AZN</div>
+        <div id="stat-card" class="text-2xl font-bold text-slate-100 font-mono">0.00 AZN</div>
+        <p class="text-[11px] text-slate-400 mt-1">Pos-terminal / Köçürmə</p>
       </div>
 
-      <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm">
+      <!-- Xərclər -->
+      <div class="bg-slate-800 p-5 rounded-xl border border-slate-700/80 shadow-md hover:border-slate-600 transition group">
         <div class="flex justify-between items-center text-slate-400 mb-2">
-          <span class="text-sm font-medium">Xərclər (Rasxod)</span>
-          <i class="fa-solid fa-receipt text-red-400"></i>
+          <span class="text-xs font-semibold uppercase tracking-wider">Xərclər (Rasxod)</span>
+          <div class="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-400 group-hover:scale-110 transition-transform">
+            <i class="fa-solid fa-receipt"></i>
+          </div>
         </div>
-        <div id="stat-expense" class="text-2xl font-bold text-red-400">0.00 AZN</div>
+        <div id="stat-expense" class="text-2xl font-bold text-rose-400 font-mono">0.00 AZN</div>
+        <p class="text-[11px] text-slate-400 mt-1">Əməliyyat xərcləri</p>
       </div>
 
-      <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 shadow-sm bg-gradient-to-br from-slate-800 to-slate-700">
+      <!-- Xalis Kassa -->
+      <div class="bg-gradient-to-br from-slate-800 to-slate-800/90 p-5 rounded-xl border border-yellow-500/30 shadow-md relative overflow-hidden group">
+        <div class="absolute -right-4 -bottom-4 w-20 h-20 bg-yellow-500/5 rounded-full blur-xl pointer-events-none"></div>
         <div class="flex justify-between items-center text-slate-300 mb-2">
-          <span class="text-sm font-semibold">Xalis Gün Sonu Kassası</span>
-          <i class="fa-solid fa-vault text-yellow-400"></i>
+          <span class="text-xs font-semibold uppercase tracking-wider text-yellow-400/90">Xalis Gün Sonu</span>
+          <div class="w-8 h-8 rounded-lg bg-yellow-500/10 flex items-center justify-center text-yellow-400 group-hover:scale-110 transition-transform">
+            <i class="fa-solid fa-vault"></i>
+          </div>
         </div>
-        <div id="stat-total" class="text-2xl font-extrabold text-yellow-400">0.00 AZN</div>
+        <div id="stat-total" class="text-2xl font-extrabold text-yellow-400 font-mono">0.00 AZN</div>
+        <p class="text-[11px] text-yellow-500/80 mt-1">Gəlir - Xərc balansı</p>
       </div>
+
+      <!-- Anbar Qalıq Sayı -->
+      <div class="bg-slate-800 p-5 rounded-xl border border-slate-700/80 shadow-md hover:border-slate-600 transition group">
+        <div class="flex justify-between items-center text-slate-400 mb-2">
+          <span class="text-xs font-semibold uppercase tracking-wider">Toplam Stok</span>
+          <div class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-400 group-hover:scale-110 transition-transform">
+            <i class="fa-solid fa-boxes-stacked"></i>
+          </div>
+        </div>
+        <div id="stat-stock-count" class="text-2xl font-bold text-purple-300 font-mono">0 ədəd</div>
+        <p id="stat-stock-warning" class="text-[11px] text-slate-400 mt-1">0 kritik azalan məhsul</p>
+      </div>
+
     </div>
 
-    <!-- Əməliyyatlar Cədvəli -->
-    <div class="bg-slate-800 rounded-xl border border-slate-700 shadow-sm overflow-hidden">
-      <div class="p-4 border-b border-slate-700 flex justify-between items-center">
-        <h2 class="text-lg font-bold flex items-center space-x-2">
-          <i class="fa-solid fa-list-check text-blue-400"></i>
-          <span>Son Əməliyyatlar Siyahısı</span>
-        </h2>
-        <span id="record-count" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full">0 əməliyyat</span>
+    <!-- Tab Navigation & Filters -->
+    <div class="bg-slate-800 rounded-xl border border-slate-700/80 p-4 shadow-sm space-y-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-700/60 pb-4">
+        <!-- Tabs -->
+        <div class="flex items-center space-x-1 sm:space-x-2 bg-slate-900/60 p-1 rounded-lg border border-slate-700/50 self-start">
+          <button onclick="switchTab('transactions')" id="tab-btn-transactions" class="tab-btn active px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-semibold transition flex items-center space-x-2 bg-blue-600 text-white shadow">
+            <i class="fa-solid fa-list-check"></i>
+            <span>Son Əməliyyatlar</span>
+          </button>
+          <button onclick="switchTab('inventory')" id="tab-btn-inventory" class="tab-btn px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-semibold transition text-slate-400 hover:text-slate-200 flex items-center space-x-2">
+            <i class="fa-solid fa-warehouse"></i>
+            <span>Məhsul Anbarı (Stok)</span>
+          </button>
+          <button onclick="switchTab('cashflow')" id="tab-btn-cashflow" class="tab-btn px-3 sm:px-4 py-2 rounded-md text-xs sm:text-sm font-semibold transition text-slate-400 hover:text-slate-200 flex items-center space-x-2">
+            <i class="fa-solid fa-chart-line"></i>
+            <span>Pul Hərəkəti (Kassa)</span>
+          </button>
+        </div>
+
+        <!-- Search and Filter Controls -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Search input -->
+          <div class="relative flex-1 sm:w-64">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="search-input" onkeyup="applyFilters()" placeholder="Axtar (Müştəri, Məhsul...)" class="w-full bg-slate-900/80 border border-slate-700 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500 transition">
+          </div>
+          
+          <!-- Payment Filter -->
+          <select id="filter-payment" onchange="applyFilters()" class="bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-blue-500">
+            <option value="ALL">Bütün Ödənişlər</option>
+            <option value="Nağd">Nağd</option>
+            <option value="Kart">Kart / Pos</option>
+          </select>
+
+          <!-- Status / Type Filter -->
+          <select id="filter-type" onchange="applyFilters()" class="bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-blue-500">
+            <option value="ALL">Bütün Tiplər</option>
+            <option value="Satış">Satış</option>
+            <option value="Xərc">Xərc / Rasxod</option>
+          </select>
+        </div>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm text-slate-300">
-          <thead class="bg-slate-900/50 text-slate-400 uppercase text-xs border-b border-slate-700">
-            <tr>
-              <th class="py-3 px-4">Tarix / ID</th>
-              <th class="py-3 px-4">Müştəri / Qeyd</th>
-              <th class="py-3 px-4">Məhsul / Növ</th>
-              <th class="py-3 px-4">Ədəd</th>
-              <th class="py-3 px-4">Qiymət</th>
-              <th class="py-3 px-4">Ödəniş Tipi</th>
-              <th class="py-3 px-4">Cəmi AZN</th>
-            </tr>
-          </thead>
-          <tbody id="transactions-body" class="divide-y divide-slate-700/50">
-            <tr>
-              <td colspan="7" class="text-center py-8 text-slate-500">Məlumatlar yüklənir...</td>
-            </tr>
-          </tbody>
-        </table>
+      <!-- TAB 1: Son Əməliyyatlar -->
+      <div id="tab-transactions" class="tab-content space-y-4">
+        <div class="flex justify-between items-center text-xs text-slate-400 px-1">
+          <span id="record-count" class="font-medium">0 əməliyyat göstərilir</span>
+          <span class="text-slate-500">Avtomatik Yenilənmə: Aktiv</span>
+        </div>
+
+        <div class="overflow-x-auto rounded-lg border border-slate-700/60 shadow-inner">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="bg-slate-900/90 text-slate-400 uppercase text-xs font-semibold tracking-wider border-b border-slate-700">
+              <tr>
+                <th class="py-3 px-4">Tarix</th>
+                <th class="py-3 px-4">Əməliyyat</th>
+                <th class="py-3 px-4">Müştəri / Qeyd</th>
+                <th class="py-3 px-4">Məhsul</th>
+                <th class="py-3 px-4 text-center">Ədəd</th>
+                <th class="py-3 px-4 text-right">Qiymət</th>
+                <th class="py-3 px-4 text-center">Ödəniş Tipi</th>
+                <th class="py-3 px-4 text-right">Cəmi AZN</th>
+                <th class="py-3 px-4 text-center">Əməl</th>
+              </tr>
+            </thead>
+            <tbody id="transactions-body" class="divide-y divide-slate-700/50 bg-slate-800/50">
+              <tr>
+                <td colspan="9" class="text-center py-8 text-slate-400">
+                  <i class="fa-solid fa-spinner fa-spin text-xl text-blue-400 mb-2 block"></i>
+                  Məlumatlar yüklənir...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+
+      <!-- TAB 2: Məhsul Anbarı (Stok) -->
+      <div id="tab-inventory" class="tab-content hidden space-y-4">
+        <div class="flex justify-between items-center px-1">
+          <div class="text-xs text-slate-400">
+            <span>Kritik Anbar Limiti: </span>
+            <span class="text-amber-400 font-bold">10 ədəd-dən az</span>
+          </div>
+          <button onclick="openModal('modal-stock')" class="bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 shadow">
+            <i class="fa-solid fa-plus"></i>
+            <span>Yeni Məhsul Əlavə Et</span>
+          </button>
+        </div>
+
+        <div class="overflow-x-auto rounded-lg border border-slate-700/60 shadow-inner">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="bg-slate-900/90 text-slate-400 uppercase text-xs font-semibold tracking-wider border-b border-slate-700">
+              <tr>
+                <th class="py-3 px-4">Kod</th>
+                <th class="py-3 px-4">Məhsul Adı</th>
+                <th class="py-3 px-4">Kateqoriya</th>
+                <th class="py-3 px-4 text-center">İlkin</th>
+                <th class="py-3 px-4 text-center">Satılan</th>
+                <th class="py-3 px-4 text-center">Qalıq Stok</th>
+                <th class="py-3 px-4 text-right">Maya Qiyməti</th>
+                <th class="py-3 px-4 text-right">Satış Qiyməti</th>
+                <th class="py-3 px-4 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody id="inventory-body" class="divide-y divide-slate-700/50 bg-slate-800/50">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 3: Pul Hərəkəti (Kassa) -->
+      <div id="tab-cashflow" class="tab-content hidden space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+          <div class="bg-slate-900/50 p-4 rounded-xl border border-emerald-500/20 flex items-center justify-between">
+            <div>
+              <p class="text-xs text-slate-400 uppercase font-semibold">Cəmi Mədaxil (Gəlir)</p>
+              <h3 id="cashflow-income" class="text-xl font-bold text-emerald-400 font-mono mt-0.5">0.00 AZN</h3>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+              <i class="fa-solid fa-arrow-down-long text-lg"></i>
+            </div>
+          </div>
+          <div class="bg-slate-900/50 p-4 rounded-xl border border-rose-500/20 flex items-center justify-between">
+            <div>
+              <p class="text-xs text-slate-400 uppercase font-semibold">Cəmi Məxaric (Xərc)</p>
+              <h3 id="cashflow-expense" class="text-xl font-bold text-rose-400 font-mono mt-0.5">0.00 AZN</h3>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-400">
+              <i class="fa-solid fa-arrow-up-long text-lg"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto rounded-lg border border-slate-700/60 shadow-inner">
+          <table class="w-full text-left text-sm text-slate-300">
+            <thead class="bg-slate-900/90 text-slate-400 uppercase text-xs font-semibold tracking-wider border-b border-slate-700">
+              <tr>
+                <th class="py-3 px-4">Tarix</th>
+                <th class="py-3 px-4">Hərəkət Tipi</th>
+                <th class="py-3 px-4">Təfərrüat / Təyinat</th>
+                <th class="py-3 px-4">Ödəniş Üsulu</th>
+                <th class="py-3 px-4 text-right">Mədaxil (+)</th>
+                <th class="py-3 px-4 text-right">Məxaric (-)</th>
+              </tr>
+            </thead>
+            <tbody id="cashflow-body" class="divide-y divide-slate-700/50 bg-slate-800/50">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
     </div>
   </main>
 
+
+  <!-- MODAL 1: YENİ SATIŞ ƏLAVƏ ET -->
+  <div id="modal-sale" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 transition-opacity">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+        <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+          <i class="fa-solid fa-cart-plus text-emerald-400"></i>
+          <span>Yeni Satış Qeydiyyatı</span>
+        </h3>
+        <button onclick="closeModal('modal-sale')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="form-sale" onsubmit="handleSaleSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Müştərinin Adı / Şirkət *</label>
+          <input type="text" id="sale-customer" required placeholder="Məs: Əli Məmmədov" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Məhsul Seçin *</label>
+            <select id="sale-product" onchange="updateSaleProductPrice()" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Sayı (Ədəd) *</label>
+            <input type="number" id="sale-qty" min="1" value="1" oninput="calcSaleTotal()" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Tək Qiyməti (AZN) *</label>
+            <input type="number" step="0.01" id="sale-price" min="0" oninput="calcSaleTotal()" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Ödəniş Tipi *</label>
+            <select id="sale-payment" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
+              <option value="Nağd">Nağd</option>
+              <option value="Kart">Kart / Pos-Terminal</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700 flex justify-between items-center">
+          <span class="text-xs text-slate-400 font-semibold">Ümumi Yekun Məbləğ:</span>
+          <span id="sale-total-display" class="text-lg font-bold text-emerald-400 font-mono">0.00 AZN</span>
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeModal('modal-sale')" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-slate-300">Ləğv et</button>
+          <button type="submit" class="px-4 py-2 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow">Təsdiqlə və Yadda Saxla</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 2: YENİ XƏRC (RASXOD) ƏLAVƏ ET -->
+  <div id="modal-expense" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 transition-opacity">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+        <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+          <i class="fa-solid fa-receipt text-rose-400"></i>
+          <span>Xərc / Rasxod Qeydiyyatı</span>
+        </h3>
+        <button onclick="closeModal('modal-expense')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="form-expense" onsubmit="handleExpenseSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Xərcin Təyinatı / Qeyd *</label>
+          <input type="text" id="expense-title" required placeholder="Məs: Anbar İcarəsi, Fəhlə Haqqı, Reklam" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-rose-500">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Məbləğ (AZN) *</label>
+            <input type="number" step="0.01" id="expense-amount" min="0.01" required placeholder="0.00" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-rose-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Ödəniş Mənbəyi *</label>
+            <select id="expense-payment" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-rose-500">
+              <option value="Nağd">Nağd Kassa</option>
+              <option value="Kart">Bank Hesabı / Kart</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeModal('modal-expense')" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-slate-300">Ləğv et</button>
+          <button type="submit" class="px-4 py-2 rounded-lg text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white shadow">Xərci Təsdiqlə</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 3: YENİ MƏHSUL (STOK) ƏLAVƏ ET -->
+  <div id="modal-stock" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 transition-opacity">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+        <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+          <i class="fa-solid fa-box text-purple-400"></i>
+          <span>Yeni Məhsul Əlavə Et</span>
+        </h3>
+        <button onclick="closeModal('modal-stock')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form id="form-stock" onsubmit="handleStockSubmit(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Məhsul Adı *</label>
+          <input type="text" id="stock-name" required placeholder="Məs: Bambuk Panel 290cm" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-purple-500">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Məhsul Kodu</label>
+            <input type="text" id="stock-code" placeholder="Məs: PRD-005" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-purple-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Kateqoriya *</label>
+            <input type="text" id="stock-cat" required placeholder="Məs: Bambuk, Moldinq" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-purple-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">İlkin Say *</label>
+            <input type="number" id="stock-qty" min="0" required value="50" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-purple-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Maya (AZN) *</label>
+            <input type="number" step="0.01" id="stock-cost" min="0" required placeholder="0.00" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-purple-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Satış (AZN) *</label>
+            <input type="number" step="0.01" id="stock-price" min="0" required placeholder="0.00" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-purple-500">
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" onclick="closeModal('modal-stock')" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-slate-300">Ləğv et</button>
+          <button type="submit" class="px-4 py-2 rounded-lg text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white shadow">Anbara Əlavə Et</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL 4: GOOGLE SCRIPT URL AYARLARI -->
+  <div id="modal-settings" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4 transition-opacity">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-lg w-full p-6 shadow-2xl relative space-y-4">
+      <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+        <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-blue-400"></i>
+          <span>Google Apps Script İnteqrasiyası</span>
+        </h3>
+        <button onclick="closeModal('modal-settings')" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="space-y-3">
+        <p class="text-xs text-slate-300 leading-relaxed">
+          Məlumatların canlı olaraq Google Sheets-dən oxunması və bura yazılması üçün Google Apps Script Web App URL-inizi təyin edin.
+        </p>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">Web App URL (SCRIPT_URL):</label>
+          <input type="text" id="setting-script-url" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs font-mono text-slate-200 focus:outline-none focus:border-blue-500">
+        </div>
+        <div class="p-3 bg-blue-950/40 border border-blue-800/40 rounded-lg text-[11px] text-blue-300">
+          <i class="fa-solid fa-circle-info me-1"></i> Bos saxlasanız, sistem yerli brauzer yaddaşı (Demo Rejim) ilə çalışacaqdır.
+        </div>
+      </div>
+
+      <div class="flex justify-between items-center pt-2">
+        <button onclick="resetToDemoData()" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-900/50 text-rose-300 border border-rose-700/50 hover:bg-rose-800/60">
+          Demo Məlumatları Bərpa Et
+        </button>
+        <div class="flex space-x-2">
+          <button type="button" onclick="closeModal('modal-settings')" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-700 hover:bg-slate-600 text-slate-300">Bağla</button>
+          <button type="button" onclick="saveSettings()" class="px-4 py-2 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow">Yadda Saxla</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-slate-800 border border-slate-700 text-slate-100 px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3">
+    <div id="toast-icon" class="text-lg"></div>
+    <span id="toast-msg" class="text-xs font-medium"></span>
+  </div>
+
   <script>
-    // Yeni Yenilənmiş Apps Script URL-iniz:
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwILVdzjQB7aCaThLCgXLmO1DeVKSHmNlYdby2g5yd9hehHkJZPgk-PsH_KORhImmXmbg/exec";
+    // Config and Initial State
+    let SCRIPT_URL = localStorage.getItem("eurohome_script_url") || "https://script.google.com/macros/s/AKfycbwILVdzjQB7aCaThLCgXLmO1DeVKSHmNlYdby2g5yd9hehHkJZPgk-PsH_KORhImmXmbg/exec";
 
-    async function fetchSheetData() {
-      const tbody = document.getElementById("transactions-body");
-      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-400"><i class="fa-solid fa-spinner fa-spin me-2"></i>Məlumatlar oxunur...</td></tr>`;
+    // Initial Demo Products
+    const defaultProducts = [
+      { id: "PRD-001", name: "Bambuk Panel Premium (290x12cm)", category: "Bambuk", initialQty: 120, cost: 18.00, price: 28.50 },
+      { id: "PRD-002", name: "Mərmər Dekoru Panel (280x122cm)", category: "Mərmər", initialQty: 45, cost: 42.00, price: 65.00 },
+      { id: "PRD-003", name: "Akustik Akustik Reyka Akçaağaç", category: "Akustik", initialQty: 8, cost: 35.00, price: 52.00 },
+      { id: "PRD-004", name: "Poliuretan Moldinq M-102 (2 metr)", category: "Moldinq", initialQty: 210, cost: 3.50, price: 7.00 },
+      { id: "PRD-005", name: "Taxta Naxışlı Panel Nut", category: "Bambuk", initialQty: 5, cost: 20.00, price: 32.00 }
+    ];
 
-      try {
-        const res = await fetch(SCRIPT_URL, { redirect: "follow" });
-        if(!res.ok) {
-          throw new Error(`Server cavabı mənfidir: ${res.status}`);
-        }
-        
-        const data = await res.json();
+    // Initial Demo Transactions
+    const defaultTransactions = [
+      { id: "TRX-101", date: "2026-10-04 11:30", type: "Satış", customer: "Ramil Məmmədov", item: "Bambuk Panel Premium (290x12cm)", qty: 10, price: 28.50, total: 285.00, paymentType: "Kart" },
+      { id: "TRX-102", date: "2026-10-04 10:15", type: "Satış", customer: "Nəriman Həsənov", item: "Poliuretan Moldinq M-102 (2 metr)", qty: 15, price: 7.00, total: 105.00, paymentType: "Nağd" },
+      { id: "TRX-103", date: "2026-10-04 09:40", type: "Xərc", customer: "Anbar Logistika / Maşın", item: "Daşınma Xərci", qty: 1, price: 40.00, total: 40.00, paymentType: "Nağd" },
+      { id: "TRX-104", date: "2026-10-03 16:20", type: "Satış", customer: "EuroDesign QSC", item: "Mərmər Dekoru Panel (280x122cm)", qty: 4, price: 65.00, total: 260.00, paymentType: "Kart" }
+    ];
 
-        if (data.error) {
-          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-red-400">Google Script Xətası: ${data.error}</td></tr>`;
-          return;
-        }
+    // State Variables
+    let products = JSON.parse(localStorage.getItem("eurohome_products")) || defaultProducts;
+    let transactions = JSON.parse(localStorage.getItem("eurohome_transactions")) || defaultTransactions;
+    let filteredTransactions = [...transactions];
 
-        // Statistikalar
-        document.getElementById("stat-cash").innerText = (data.summary.cash || 0).toFixed(2) + " AZN";
-        document.getElementById("stat-card").innerText = (data.summary.card || 0).toFixed(2) + " AZN";
-        document.getElementById("stat-expense").innerText = (data.summary.expense || 0).toFixed(2) + " AZN";
-        document.getElementById("stat-total").innerText = (data.summary.netTotal || 0).toFixed(2) + " AZN";
+    document.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("setting-script-url").value = SCRIPT_URL;
+      populateProductDropdown();
+      fetchSheetData();
+    });
 
-        // Cədvəl
-        document.getElementById("record-count").innerText = `${data.transactions.length} əməliyyat`;
-        tbody.innerHTML = "";
+    // Save Data to Local Storage
+    function saveDataLocally() {
+      localStorage.setItem("eurohome_products", JSON.stringify(products));
+      localStorage.setItem("eurohome_transactions", JSON.stringify(transactions));
+    }
 
-        if(!data.transactions || data.transactions.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="7" class="text-center py-8 text-slate-500">Heç bir əməliyyat tapılmadı.</td></tr>`;
-          return;
-        }
-
-        data.transactions.forEach(item => {
-          const row = document.createElement("tr");
-          row.className = "hover:bg-slate-700/30 transition";
-          row.innerHTML = `
-            <td class="py-3 px-4 font-mono text-xs text-slate-400">${item.date || '-'}</td>
-            <td class="py-3 px-4 font-semibold text-slate-200">${item.customer || '-'}</td>
-            <td class="py-3 px-4">${item.item || '-'}</td>
-            <td class="py-3 px-4 font-mono">${item.qty || '0'}</td>
-            <td class="py-3 px-4 font-mono">${item.price || '0.00'} AZN</td>
-            <td class="py-3 px-4">
-              <span class="px-2 py-1 rounded text-xs font-semibold ${item.paymentType === 'Kart' ? 'bg-blue-900/60 text-blue-300 border border-blue-700/50' : 'bg-green-900/60 text-green-300 border border-green-700/50'}">
-                ${item.paymentType || 'Nəğd'}
-              </span>
-            </td>
-            <td class="py-3 px-4 font-bold font-mono text-slate-100">${item.total || '0.00'} AZN</td>
-          `;
-          tbody.appendChild(row);
-        });
-
-      } catch (error) {
-        console.error("Detallı Xəta:", error);
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="7" class="text-center py-8 text-red-400">
-              <p class="font-semibold text-base mb-1">Məlumat almaq mümkün olmadı</p>
-              <p class="text-xs text-slate-400">Səbəb: Apps Script-də "Execute as: Me" və "Who has access: Anyone" ayarlarını dəqiqləşdirin.</p>
-            </td>
-          </tr>`;
+    // Reset Demo Data
+    function resetToDemoData() {
+      if(confirm("Bütün məlumatlar ilkin demo vəziyyətinə qaytarılsın?")) {
+        products = [...defaultProducts];
+        transactions = [...defaultTransactions];
+        saveDataLocally();
+        populateProductDropdown();
+        renderAll();
+        showToast("Demo məlumatları bərpa olundu", "success");
+        closeModal("modal-settings");
       }
     }
 
-    document.addEventListener("DOMContentLoaded", fetchSheetData);
+    // Main Fetch Function
+    async function fetchSheetData() {
+      const icon = document.getElementById("refresh-icon");
+      if(icon) icon.classList.add("fa-spin");
+
+      const tbody = document.getElementById("transactions-body");
+      
+      if (!SCRIPT_URL || SCRIPT_URL.trim() === "") {
+        // Fallback to local data
+        renderAll();
+        if(icon) icon.classList.remove("fa-spin");
+        return;
+      }
+
+      try {
+        const res = await fetch(SCRIPT_URL, { redirect: "follow" });
+        if(!res.ok) throw new Error("Server cavabı mənfidir: " + res.status);
+        
+        const data = await res.json();
+
+        if (data.transactions && Array.isArray(data.transactions) && data.transactions.length > 0) {
+          transactions = data.transactions.map((t, idx) => ({
+            id: t.id || `TRX-${100 + idx}`,
+            date: t.date || new Date().toISOString().slice(0,10),
+            type: t.type || (t.item && t.item.includes("Rasxod") ? "Xərc" : "Satış"),
+            customer: t.customer || t.note || "Müştəri",
+            item: t.item || "Məhsul",
+            qty: Number(t.qty) || 1,
+            price: Number(t.price) || 0,
+            total: Number(t.total) || (Number(t.qty || 1) * Number(t.price || 0)),
+            paymentType: t.paymentType || "Nağd"
+          }));
+          saveDataLocally();
+        }
+        showToast("Məlumatlar uğurla güncelləndi", "success");
+      } catch (err) {
+        console.warn("Google Sheet bağlantı xətası, daxili lokal məlumatlar istifadə edilir:", err);
+        showToast("Şəbəkə xətası! Lokaldakı məlumatlar göstərilir.", "warning");
+      } finally {
+        if(icon) icon.classList.remove("fa-spin");
+        renderAll();
+      }
+    }
+
+    function renderAll() {
+      applyFilters();
+      renderInventory();
+      renderCashFlow();
+    }
+
+    // Calculate Dynamic Sold Quantities & Stock Balances
+    function calculateStockStats() {
+      const stockMap = {};
+      products.forEach(p => {
+        stockMap[p.name] = { ...p, soldQty: 0 };
+      });
+
+      transactions.forEach(t => {
+        if (t.type === "Satış" && stockMap[t.item]) {
+          stockMap[t.item].soldQty += Number(t.qty || 0);
+        }
+      });
+
+      return stockMap;
+    }
+
+    // Calculate KPI Totals
+    function updateKPIs() {
+      let cashSales = 0;
+      let cardSales = 0;
+      let expenses = 0;
+
+      transactions.forEach(t => {
+        const amount = Number(t.total) || 0;
+        if (t.type === "Xərc" || t.item?.includes("Xərc")) {
+          expenses += amount;
+        } else {
+          if (t.paymentType === "Kart") {
+            cardSales += amount;
+          } else {
+            cashSales += amount;
+          }
+        }
+      });
+
+      const netTotal = (cashSales + cardSales) - expenses;
+
+      // Update KPI DOM
+      document.getElementById("stat-cash").innerText = cashSales.toFixed(2) + " AZN";
+      document.getElementById("stat-card").innerText = cardSales.toFixed(2) + " AZN";
+      document.getElementById("stat-expense").innerText = expenses.toFixed(2) + " AZN";
+      document.getElementById("stat-total").innerText = netTotal.toFixed(2) + " AZN";
+
+      // Inventory Total Stock & Warning Count
+      const stockMap = calculateStockStats();
+      let totalRemainingStock = 0;
+      let lowStockCount = 0;
+
+      Object.values(stockMap).forEach(item => {
+        const remaining = item.initialQty - item.soldQty;
+        totalRemainingStock += Math.max(0, remaining);
+        if (remaining < 10) lowStockCount++;
+      });
+
+      document.getElementById("stat-stock-count").innerText = totalRemainingStock + " ədəd";
+      const warnEl = document.getElementById("stat-stock-warning");
+      if (lowStockCount > 0) {
+        warnEl.innerText = `${lowStockCount} kritik azalan məhsul!`;
+        warnEl.className = "text-[11px] text-amber-400 font-semibold mt-1";
+      } else {
+        warnEl.innerText = "Stok normadadır";
+        warnEl.className = "text-[11px] text-slate-400 mt-1";
+      }
+    }
+
+    function renderTransactions() {
+      const tbody = document.getElementById("transactions-body");
+      const recordCount = document.getElementById("record-count");
+      
+      tbody.innerHTML = "";
+      recordCount.innerText = `${filteredTransactions.length} əməliyyat gösterilir`;
+
+      if (filteredTransactions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-500">Uyğun əməliyyat tapılmadı.</td></tr>`;
+        return;
+      }
+
+      filteredTransactions.forEach(t => {
+        const isExpense = t.type === "Xərc";
+        const row = document.createElement("tr");
+        row.className = "hover:bg-slate-700/40 transition text-xs border-b border-slate-700/40";
+        
+        row.innerHTML = `
+          <td class="py-3 px-4 font-mono text-slate-400">${t.date || '-'}</td>
+          <td class="py-3 px-4">
+            <span class="px-2 py-0.5 rounded text-[11px] font-semibold ${isExpense ? 'bg-rose-900/50 text-rose-300 border border-rose-700/50' : 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/50'}">
+              ${isExpense ? 'Məxaric / Xərc' : 'Satış'}
+            </span>
+          </td>
+          <td class="py-3 px-4 font-semibold text-slate-200">${t.customer || '-'}</td>
+          <td class="py-3 px-4 text-slate-300">${t.item || '-'}</td>
+          <td class="py-3 px-4 text-center font-mono">${t.qty || 1}</td>
+          <td class="py-3 px-4 text-right font-mono">${Number(t.price || 0).toFixed(2)} ₼</td>
+          <td class="py-3 px-4 text-center">
+            <span class="px-2 py-0.5 rounded text-[11px] font-semibold ${t.paymentType === 'Kart' ? 'bg-blue-900/50 text-blue-300 border border-blue-700/40' : 'bg-amber-900/50 text-amber-300 border border-amber-700/40'}">
+              ${t.paymentType || 'Nağd'}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-right font-bold font-mono ${isExpense ? 'text-rose-400' : 'text-slate-100'}">
+            ${isExpense ? '-' : ''}${Number(t.total || 0).toFixed(2)} AZN
+          </td>
+          <td class="py-3 px-4 text-center">
+            <button onclick="deleteTransaction('${t.id}')" title="Sil" class="text-slate-500 hover:text-rose-400 transition p-1">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      updateKPIs();
+    }
+
+    // Filter Transactions
+    function applyFilters() {
+      const search = document.getElementById("search-input").value.toLowerCase();
+      const payment = document.getElementById("filter-payment").value;
+      const type = document.getElementById("filter-type").value;
+
+      filteredTransactions = transactions.filter(t => {
+        const matchesSearch = (t.customer && t.customer.toLowerCase().includes(search)) ||
+                              (t.item && t.item.toLowerCase().includes(search));
+        
+        const matchesPayment = payment === "ALL" || t.paymentType === payment;
+        const matchesType = type === "ALL" || 
+                            (type === "Satış" && t.type !== "Xərc") || 
+                            (type === "Xərc" && t.type === "Xərc");
+
+        return matchesSearch && matchesPayment && matchesType;
+      });
+
+      renderTransactions();
+    }
+
+    function renderInventory() {
+      const tbody = document.getElementById("inventory-body");
+      tbody.innerHTML = "";
+
+      const stockMap = calculateStockStats();
+
+      Object.values(stockMap).forEach(item => {
+        const remaining = item.initialQty - item.soldQty;
+        const isLow = remaining < 10;
+        
+        const row = document.createElement("tr");
+        row.className = "hover:bg-slate-700/40 transition text-xs border-b border-slate-700/40";
+
+        row.innerHTML = `
+          <td class="py-3 px-4 font-mono text-slate-400">${item.id}</td>
+          <td class="py-3 px-4 font-semibold text-slate-100">${item.name}</td>
+          <td class="py-3 px-4 text-slate-400"><span class="bg-slate-700/60 px-2 py-0.5 rounded">${item.category}</span></td>
+          <td class="py-3 px-4 text-center font-mono text-slate-300">${item.initialQty}</td>
+          <td class="py-3 px-4 text-center font-mono text-emerald-400">${item.soldQty}</td>
+          <td class="py-3 px-4 text-center font-mono font-bold ${isLow ? 'text-amber-400' : 'text-slate-100'}">${remaining}</td>
+          <td class="py-3 px-4 text-right font-mono text-slate-400">${Number(item.cost).toFixed(2)} ₼</td>
+          <td class="py-3 px-4 text-right font-mono font-semibold text-emerald-300">${Number(item.price).toFixed(2)} ₼</td>
+          <td class="py-3 px-4 text-center">
+            ${isLow ? 
+              `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-900/60 text-amber-300 border border-amber-600/50"><i class="fa-solid fa-triangle-exclamation me-1"></i>Kritik Az</span>` : 
+              `<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-700 text-slate-300">Kafi</span>`
+            }
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function renderCashFlow() {
+      const tbody = document.getElementById("cashflow-body");
+      tbody.innerHTML = "";
+
+      let totalIn = 0;
+      let totalOut = 0;
+
+      transactions.forEach(t => {
+        const isExpense = t.type === "Xərc";
+        const amt = Number(t.total) || 0;
+
+        if(isExpense) totalOut += amt;
+        else totalIn += amt;
+
+        const row = document.createElement("tr");
+        row.className = "hover:bg-slate-700/40 transition text-xs border-b border-slate-700/40";
+
+        row.innerHTML = `
+          <td class="py-3 px-4 font-mono text-slate-400">${t.date}</td>
+          <td class="py-3 px-4">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isExpense ? 'bg-rose-900/50 text-rose-300' : 'bg-emerald-900/50 text-emerald-300'}">
+              ${isExpense ? 'MƏXARİC' : 'MƏDAXİL'}
+            </span>
+          </td>
+          <td class="py-3 px-4 text-slate-200 font-medium">${t.customer} (${t.item})</td>
+          <td class="py-3 px-4 text-slate-400">${t.paymentType}</td>
+          <td class="py-3 px-4 text-right font-mono text-emerald-400 font-semibold">${!isExpense ? '+' + amt.toFixed(2) + ' ₼' : '-'}</td>
+          <td class="py-3 px-4 text-right font-mono text-rose-400 font-semibold">${isExpense ? '-' + amt.toFixed(2) + ' ₼' : '-'}</td>
+        `;
+        tbody.appendChild(row);
+      });
+
+      document.getElementById("cashflow-income").innerText = totalIn.toFixed(2) + " AZN";
+      document.getElementById("cashflow-expense").innerText = totalOut.toFixed(2) + " AZN";
+    }
+
+    function populateProductDropdown() {
+      const select = document.getElementById("sale-product");
+      select.innerHTML = "";
+      products.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.name;
+        opt.dataset.price = p.price;
+        opt.innerText = `${p.name} (${p.price.toFixed(2)} AZN)`;
+        select.appendChild(opt);
+      });
+      updateSaleProductPrice();
+    }
+
+    function updateSaleProductPrice() {
+      const select = document.getElementById("sale-product");
+      const selectedOpt = select.options[select.selectedIndex];
+      if (selectedOpt) {
+        document.getElementById("sale-price").value = selectedOpt.dataset.price || 0;
+        calcSaleTotal();
+      }
+    }
+
+    function calcSaleTotal() {
+      const qty = Number(document.getElementById("sale-qty").value) || 0;
+      const price = Number(document.getElementById("sale-price").value) || 0;
+      const total = qty * price;
+      document.getElementById("sale-total-display").innerText = total.toFixed(2) + " AZN";
+    }
+
+    // Submit New Sale
+    async function handleSaleSubmit(e) {
+      e.preventDefault();
+      const customer = document.getElementById("sale-customer").value.trim();
+      const product = document.getElementById("sale-product").value;
+      const qty = Number(document.getElementById("sale-qty").value);
+      const price = Number(document.getElementById("sale-price").value);
+      const paymentType = document.getElementById("sale-payment").value;
+      const total = qty * price;
+
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0,10) + " " + now.toTimeString().slice(0,5);
+
+      const newTx = {
+        id: "TRX-" + Math.floor(1000 + Math.random() * 9000),
+        date: dateStr,
+        type: "Satış",
+        customer: customer,
+        item: product,
+        qty: qty,
+        price: price,
+        total: total,
+        paymentType: paymentType
+      };
+
+      transactions.unshift(newTx);
+      saveDataLocally();
+      renderAll();
+      closeModal("modal-sale");
+      document.getElementById("form-sale").reset();
+      showToast("Yeni satış əlavə edildi!", "success");
+
+      // Optional Sync to Script URL
+      sendToGoogleScript(newTx);
+    }
+
+    // Submit Expense
+    async function handleExpenseSubmit(e) {
+      e.preventDefault();
+      const title = document.getElementById("expense-title").value.trim();
+      const amount = Number(document.getElementById("expense-amount").value);
+      const paymentType = document.getElementById("expense-payment").value;
+
+      const now = new Date();
+      const dateStr = now.toISOString().slice(0,10) + " " + now.toTimeString().slice(0,5);
+
+      const newTx = {
+        id: "EXP-" + Math.floor(1000 + Math.random() * 9000),
+        date: dateStr,
+        type: "Xərc",
+        customer: "Təşkilati / Əməliyyat Xərci",
+        item: title,
+        qty: 1,
+        price: amount,
+        total: amount,
+        paymentType: paymentType
+      };
+
+      transactions.unshift(newTx);
+      saveDataLocally();
+      renderAll();
+      closeModal("modal-expense");
+      document.getElementById("form-expense").reset();
+      showToast("Xərc uğurla qeydə alındı!", "warning");
+
+      sendToGoogleScript(newTx);
+    }
+
+    // Submit Stock
+    function handleStockSubmit(e) {
+      e.preventDefault();
+      const name = document.getElementById("stock-name").value.trim();
+      const code = document.getElementById("stock-code").value.trim() || ("PRD-" + (products.length + 1).toString().padStart(3, '0'));
+      const cat = document.getElementById("stock-cat").value.trim();
+      const qty = Number(document.getElementById("stock-qty").value);
+      const cost = Number(document.getElementById("stock-cost").value);
+      const price = Number(document.getElementById("stock-price").value);
+
+      products.push({ id: code, name: name, category: cat, initialQty: qty, cost: cost, price: price });
+      saveDataLocally();
+      populateProductDropdown();
+      renderAll();
+      closeModal("modal-stock");
+      document.getElementById("form-stock").reset();
+      showToast("Məhsul anbara əlavə olundu!", "success");
+    }
+
+    // Delete Transaction
+    function deleteTransaction(id) {
+      if (confirm("Bu əməliyyatı silməyə əminsiniz?")) {
+        transactions = transactions.filter(t => t.id !== id);
+        saveDataLocally();
+        renderAll();
+        showToast("Əməliyyat silindi", "info");
+      }
+    }
+
+    // Send payload to Apps Script if configured
+    async function sendToGoogleScript(payload) {
+      if (!SCRIPT_URL || SCRIPT_URL.trim() === "") return;
+      try {
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.warn("Script POST xətası:", err);
+      }
+    }
+
+    // Save Settings
+    function saveSettings() {
+      const url = document.getElementById("setting-script-url").value.trim();
+      SCRIPT_URL = url;
+      localStorage.setItem("eurohome_script_url", url);
+      showToast("Ayarlar saxlanıldı", "success");
+      closeModal("modal-settings");
+      fetchSheetData();
+    }
+
+    function switchTab(tabKey) {
+      document.querySelectorAll(".tab-content").forEach(el => el.classList.add("hidden"));
+      document.querySelectorAll(".tab-btn").forEach(el => {
+        el.classList.remove("bg-blue-600", "text-white", "shadow");
+        el.classList.add("text-slate-400");
+      });
+
+      document.getElementById(`tab-${tabKey}`).classList.remove("hidden");
+      const activeBtn = document.getElementById(`tab-btn-${tabKey}`);
+      activeBtn.classList.add("bg-blue-600", "text-white", "shadow");
+      activeBtn.classList.remove("text-slate-400");
+    }
+
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function showToast(message, type = "info") {
+      const toast = document.getElementById("toast");
+      const msgEl = document.getElementById("toast-msg");
+      const iconEl = document.getElementById("toast-icon");
+
+      msgEl.innerText = message;
+
+      if (type === "success") {
+        iconEl.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i>`;
+      } else if (type === "warning") {
+        iconEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-400"></i>`;
+      } else {
+        iconEl.innerHTML = `<i class="fa-solid fa-circle-info text-blue-400"></i>`;
+      }
+
+      toast.classList.remove("translate-y-20", "opacity-0");
+      toast.classList.add("translate-y-0", "opacity-100");
+
+      setTimeout(() => {
+        toast.classList.remove("translate-y-0", "opacity-100");
+        toast.classList.add("translate-y-20", "opacity-0");
+      }, 3000);
+    }
   </script>
 </body>
 </html>
