@@ -44,11 +44,6 @@
     </div>
   </div>
 
-  <!-- OFFLINE BANNER -->
-  <div id="offlineBanner" class="fixed top-0 left-0 right-0 bg-rose-500 text-white text-xs font-semibold text-center py-2 z-50 hidden shadow-md">
-    İnternet yoxdur. Əməliyyatlar növbədə gözləyir (<span id="queueCount">0</span>).
-  </div>
-
   <!-- SIDEBAR -->
   <aside class="hidden md:flex flex-col w-64 bg-slate-900 text-slate-300 h-full shadow-xl z-10 shrink-0">
     <div class="p-5 border-b border-slate-800 flex items-center gap-3">
@@ -84,14 +79,46 @@
       <div class="text-xs font-semibold bg-slate-100 px-2 py-1 rounded-full"><i class="fa-solid fa-user"></i> <span id="mobileActiveUser">Bəhram</span></div>
     </header>
 
-    <div class="flex-1 overflow-y-auto p-4 sm:p-6 pb-24 md:pb-6" id="mainContainer">
+    <div class="flex-1 overflow-y-auto p-4 sm:p-6 pb-24 md:pb-6 space-y-6" id="mainContainer">
       
       <!-- DASHBOARD -->
       <div id="view-dashboard" class="view-section space-y-4">
-        <div class="flex justify-between items-center"><h2 class="text-xl font-bold">Xülasə</h2><button onclick="forceSync()" class="text-xs bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg font-semibold"><i class="fa-solid fa-rotate mr-1"></i> Yenilə</button></div>
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div class="bg-white p-4 rounded-xl shadow-sm border"><p class="text-xs text-slate-500 mb-1">Günün Satışı</p><p class="text-xl font-bold text-emerald-600" id="dashSales">0.00 ₼</p></div>
-          <div class="bg-white p-4 rounded-xl shadow-sm border"><p class="text-xs text-slate-500 mb-1">Günün Xərci</p><p class="text-xl font-bold text-rose-500" id="dashExpenses">0.00 ₼</p></div>
+        <div class="flex justify-between items-center">
+          <h2 class="text-xl font-bold">Xülasə və Günün Sonu</h2>
+          <div class="flex gap-2">
+            <button onclick="loadDataFromSheets()" class="text-xs bg-blue-100 text-blue-700 px-3 py-2 rounded-lg font-semibold"><i class="fa-solid fa-rotate mr-1"></i> Sinxronlaşdır</button>
+            <button onclick="dayEndReport()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold shadow"><i class="fa-solid fa-flag-checkered mr-1"></i> Günün Sonu</button>
+          </div>
+        </div>
+        
+        <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <div class="bg-white p-4 rounded-xl shadow-sm border"><p class="text-xs text-slate-500 mb-1">Bugünkü Satış</p><p class="text-2xl font-bold text-emerald-600" id="dashSales">0.00 ₼</p></div>
+          <div class="bg-white p-4 rounded-xl shadow-sm border"><p class="text-xs text-slate-500 mb-1">Bugünkü Xərc</p><p class="text-2xl font-bold text-rose-500" id="dashExpenses">0.00 ₼</p></div>
+          <div class="bg-white p-4 rounded-xl shadow-sm border col-span-2 lg:col-span-1"><p class="text-xs text-slate-500 mb-1">Kassa Balansı</p><p class="text-2xl font-bold text-blue-600" id="dashBalance">0.00 ₼</p></div>
+        </div>
+
+        <!-- BU GÜN ERZİNDƏ SATILAN MƏHSULLAR -->
+        <div class="bg-white rounded-xl shadow-sm border p-4">
+          <h3 class="font-bold text-sm mb-3 flex items-center justify-between text-slate-700">
+            <span><i class="fa-solid fa-cart-flatbed text-blue-600 mr-2"></i> Bu gün ərzində satılan məhsullar</span>
+            <span class="text-xs font-normal text-slate-400" id="todayDateStr"></span>
+          </h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-b text-slate-500">
+                <tr>
+                  <th class="p-2.5">Saat</th>
+                  <th class="p-2.5">Məhsul</th>
+                  <th class="p-2.5 text-center">Miqdar</th>
+                  <th class="p-2.5 text-right">Qiymət</th>
+                  <th class="p-2.5 text-right">Yekun</th>
+                </tr>
+              </thead>
+              <tbody id="todaySalesTableBody">
+                <tr><td colspan="5" class="p-4 text-center text-slate-400">Bugünkü satış qeydə alınmayıb.</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -135,10 +162,33 @@
         </div>
       </div>
 
-      <!-- REPORTS -->
+      <!-- REPORTS (ÜMUMİ ƏMƏLİYYATLAR SİYAHISI) -->
       <div id="view-reports" class="view-section hidden space-y-4">
-        <div class="flex justify-between items-center"><h2 class="text-xl font-bold">Hesabat</h2><button onclick="document.getElementById('expenseModal').classList.remove('hidden')" class="bg-rose-500 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow">Xərc Yaz</button></div>
-        <div class="bg-white rounded-xl shadow-sm border p-4"><p class="text-sm text-slate-500">Bütün əməliyyatlar Google Sheets bazasına yazılır.</p></div>
+        <div class="flex justify-between items-center">
+          <h2 class="text-xl font-bold">Ümumi Əməliyyatlar Tarixçəsi</h2>
+          <button onclick="document.getElementById('expenseModal').classList.remove('hidden')" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow">Xərc Yaz</button>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm border overflow-hidden p-4">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 border-b text-slate-500">
+                <tr>
+                  <th class="p-2.5">Tarix</th>
+                  <th class="p-2.5">Tip</th>
+                  <th class="p-2.5">İcra Edən</th>
+                  <th class="p-2.5">Müştəri / Təchizatçı</th>
+                  <th class="p-2.5">Məhsul / Təyinat</th>
+                  <th class="p-2.5 text-center">Miq</th>
+                  <th class="p-2.5 text-right">Yekun (₼)</th>
+                  <th class="p-2.5">Ödəniş</th>
+                </tr>
+              </thead>
+              <tbody id="allTransactionsTableBody">
+                <tr><td colspan="8" class="p-4 text-center text-slate-400">Məlumatlar yüklənir...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <!-- SETTINGS -->
@@ -192,6 +242,22 @@
         <button type="button" onclick="closeModal('expenseModal')" class="flex-1 bg-slate-200 hover:bg-slate-300 font-semibold py-2.5 rounded-lg text-sm">Ləğv et</button>
         <button type="button" onclick="processExpense()" class="flex-1 bg-rose-500 hover:bg-rose-600 text-white font-bold py-2.5 rounded-lg text-sm">Təsdiqlə</button>
       </div>
+    </div>
+  </div>
+
+  <!-- DAY END REPORT MODAL -->
+  <div id="dayEndModal" class="fixed inset-0 z-[60] bg-slate-900/60 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden p-6 space-y-4">
+      <div class="text-center border-b pb-3">
+        <h3 class="text-lg font-bold text-slate-800">Günün Sonu Hesabatı</h3>
+        <p class="text-xs text-slate-500" id="dayEndModalDate"></p>
+      </div>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between bg-slate-50 p-2.5 rounded-lg"><span>Ümumi Satış:</span><strong class="text-emerald-600" id="deSales">0.00 ₼</strong></div>
+        <div class="flex justify-between bg-slate-50 p-2.5 rounded-lg"><span>Ümumi Xərc:</span><strong class="text-rose-500" id="deExpenses">0.00 ₼</strong></div>
+        <div class="flex justify-between bg-blue-50 p-2.5 rounded-lg border border-blue-100"><span>Net Kassa:</span><strong class="text-blue-600 text-base" id="deNet">0.00 ₼</strong></div>
+      </div>
+      <button onclick="closeModal('dayEndModal')" class="w-full bg-slate-800 text-white font-semibold py-3 rounded-xl">Bağla</button>
     </div>
   </div>
 
