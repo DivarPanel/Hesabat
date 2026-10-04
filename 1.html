@@ -72,10 +72,6 @@
           <i class="fa-solid fa-code"></i>
           <span>Apps Script Kodu</span>
         </button>
-        <button onclick="scrollToSection('calculator-section')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition flex items-center space-x-2 shadow-md active:scale-95">
-          <i class="fa-solid fa-calculator"></i>
-          <span>Kalkulyator</span>
-        </button>
       </div>
     </div>
   </header>
@@ -385,91 +381,6 @@ function formatDate(d) {
       </div>
     </div>
 
-    <!-- Interactive Calculator Section -->
-    <div id="calculator-section" class="bg-slate-800 rounded-xl border border-slate-700/80 p-6 shadow-md space-y-6">
-      <div class="border-b border-slate-700/80 pb-4">
-        <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
-          <i class="fa-solid fa-calculator text-emerald-400"></i>
-          <span>İnteraktiv Dekorasiya Məhsul & Sahə Kalkulyatoru</span>
-        </h3>
-        <p class="text-xs text-slate-400 mt-0.5">Divar ölçülərinə əsasən lazım olan panel sayını və smeta dəyərini anında hesablayın.</p>
-      </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- Input Form -->
-        <div class="lg:col-span-6 space-y-4">
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">Divarın Eni (metr)</label>
-              <input type="number" step="0.1" id="calc-width" value="4.5" oninput="calculateMaterial()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 font-mono">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">Divarın Hündürlüyü (metr)</label>
-              <input type="number" step="0.1" id="calc-height" value="2.8" oninput="calculateMaterial()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 font-mono">
-            </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 mb-1">Məhsul Tipi Seçin</label>
-            <select id="calc-product" onchange="calculateMaterial()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500">
-              <option value="bambuk" data-w="0.12" data-h="2.90" data-price="28.50">Bambuk Panel Premium (290x12cm) - 28.50 ₼/ədəd</option>
-              <option value="mermer" data-w="1.22" data-h="2.80" data-price="65.00">Mərmər Dekoru Panel (280x122cm) - 65.00 ₼/ədəd</option>
-              <option value="akustik" data-w="0.60" data-h="2.80" data-price="52.00">Akustik Reyka Panel (280x60cm) - 52.00 ₼/ədəd</option>
-            </select>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">Ehtiyat / İsraf faizi (%)</label>
-              <input type="number" id="calc-waste" value="10" oninput="calculateMaterial()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 font-mono">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-1">Endirim (%)</label>
-              <input type="number" id="calc-discount" value="5" oninput="calculateMaterial()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-100 focus:outline-none focus:border-emerald-500 font-mono">
-            </div>
-          </div>
-        </div>
-
-        <!-- Result Display -->
-        <div class="lg:col-span-6 bg-slate-900/80 rounded-xl border border-slate-700 p-5 flex flex-col justify-between space-y-4">
-          <div class="space-y-3">
-            <h4 class="text-xs font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-800 pb-2">Hesablama Nəticəsi</h4>
-            
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-400">Ümumi Sahə:</span>
-              <span id="res-area" class="font-bold text-slate-200 font-mono">0.00 m²</span>
-            </div>
-            
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-400">Tələb Olunan Panel Sayı:</span>
-              <span id="res-count" class="font-bold text-indigo-400 font-mono text-sm">0 ədəd</span>
-            </div>
-
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-400">İsraf ilə Birlikdə Say:</span>
-              <span id="res-total-count" class="font-bold text-emerald-400 font-mono text-sm">0 ədəd</span>
-            </div>
-
-            <div class="flex justify-between items-center text-xs">
-              <span class="text-slate-400">Təxmini Endirim:</span>
-              <span id="res-discount" class="font-bold text-amber-400 font-mono">-0.00 AZN</span>
-            </div>
-          </div>
-
-          <div class="bg-slate-800/90 p-4 rounded-xl border border-emerald-500/30 flex justify-between items-center">
-            <div>
-              <span class="text-[11px] text-slate-400 block">Yekun Smeta Qiyməti</span>
-              <span id="res-final-price" class="text-2xl font-extrabold text-emerald-400 font-mono">0.00 AZN</span>
-            </div>
-            <button onclick="copyEstimateToClipboard()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow">
-              <i class="fa-solid fa-copy"></i>
-              <span>Smetanı Kopyala</span>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
   </main>
 
   <!-- Notification Toast -->
@@ -480,10 +391,6 @@ function formatDate(d) {
 
   <script>
     const GOOGLE_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyp_oDoZ3vznDKLrfHd0-sJiBA0Oi53doZFj_wrJhyecPHGfUO1hqoT21QJuUd-jxL8uQ/exec";
-
-    document.addEventListener("DOMContentLoaded", () => {
-      calculateMaterial();
-    });
 
     // Tab switcher logic
     function showSheetTab(tabId) {
@@ -504,38 +411,6 @@ function formatDate(d) {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // Material & Price Calculation
-    function calculateMaterial() {
-      const width = parseFloat(document.getElementById('calc-width').value) || 0;
-      const height = parseFloat(document.getElementById('calc-height').value) || 0;
-      const waste = parseFloat(document.getElementById('calc-waste').value) || 0;
-      const discount = parseFloat(document.getElementById('calc-discount').value) || 0;
-
-      const prodSelect = document.getElementById('calc-product');
-      const selectedOpt = prodSelect.options[prodSelect.selectedIndex];
-
-      const pWidth = parseFloat(selectedOpt.dataset.w) || 1;
-      const pHeight = parseFloat(selectedOpt.dataset.h) || 1;
-      const unitPrice = parseFloat(selectedOpt.dataset.price) || 0;
-
-      const area = width * height;
-      const panelArea = pWidth * pHeight;
-
-      let netCount = Math.ceil(area / panelArea);
-      if (isNaN(netCount) || netCount < 0) netCount = 0;
-
-      const totalCount = Math.ceil(netCount * (1 + waste / 100));
-      const rawPrice = totalCount * unitPrice;
-      const discountAmount = rawPrice * (discount / 100);
-      const finalPrice = Math.max(0, rawPrice - discountAmount);
-
-      document.getElementById('res-area').innerText = area.toFixed(2) + " m²";
-      document.getElementById('res-count').innerText = netCount + " ədəd";
-      document.getElementById('res-total-count').innerText = totalCount + " ədəd";
-      document.getElementById('res-discount').innerText = "-" + discountAmount.toFixed(2) + " AZN";
-      document.getElementById('res-final-price').innerText = finalPrice.toFixed(2) + " AZN";
-    }
-
     // Copying Web App URL
     function copyWebAppUrl() {
       copyToClipboard(GOOGLE_WEB_APP_URL);
@@ -553,17 +428,6 @@ function formatDate(d) {
     function copyHeaderRow(text) {
       copyToClipboard(text);
       showToast("Sütun başlıqları kopyalandı!", "success");
-    }
-
-    // Copying Estimate
-    function copyEstimateToClipboard() {
-      const area = document.getElementById('res-area').innerText;
-      const count = document.getElementById('res-total-count').innerText;
-      const price = document.getElementById('res-final-price').innerText;
-      
-      const summary = `DivarPanel Smeta:\nSahə: ${area}\nTələb Olunan Məhsul: ${count}\nYekun Qiymət: ${price}\nURL: ${GOOGLE_WEB_APP_URL}`;
-      copyToClipboard(summary);
-      showToast("Smeta məlumatları kopyalandı!", "success");
     }
 
     // Helper: Clipboard Execution
