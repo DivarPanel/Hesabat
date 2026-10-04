@@ -12,9 +12,21 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadDataFromSheets() {
   showToast("DivarPanel_Final_Sablon bazasından yüklənir...", "blue");
   try {
-    const response = await fetch(APPS_SCRIPT_URL);
-    const data = await response.json();
-    if(data.status === "success") {
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: "GET",
+      redirect: "follow"
+    });
+    
+    const textData = await response.text();
+    let data;
+    try {
+      data = JSON.parse(textData);
+    } catch(parseErr) {
+      console.error("JSON parse xətası:", textData);
+      throw new Error("Giriş və ya icazə xətası");
+    }
+
+    if(data && data.status === "success") {
       productsList = data.products || [];
       transactionsList = data.transactions || [];
       renderProducts();
@@ -22,9 +34,12 @@ async function loadDataFromSheets() {
       renderReportsTable();
       renderDashboardStats();
       showToast("Baza ilə uğurla sinxronlaşdırıldı!", "emerald");
+    } else {
+      showToast("Bazadan məlumat oxunmadı.", "rose");
     }
   } catch(err) {
-    showToast("Bazadan məlumat oxunmadı. İnterneti yoxlayın.", "rose");
+    console.error(err);
+    showToast("Bazaya qoşulma xətası! İnterneti yoxlayın.", "rose");
   }
 }
 
@@ -130,13 +145,20 @@ function changeQty(index, delta) {
   const item = cart[index];
   const p = productsList.find(x => x.name === item.name);
   
-  if (delta > 0 && item.qty + 1 > p.stock) {
+  if (delta > 0 && item.qty + delta > p.stock) {
     alert("Anbarda kifayət qədər məhsul yoxdur!");
     return;
   }
   
   item.qty += delta;
   if (item.qty <= 0) cart.splice(index, 1);
+  renderCart();
+}
+
+function updateCartItemPrice(index, newPrice) {
+  const price = parseFloat(newPrice);
+  if (isNaN(price) || price < 0) return;
+  cart[index].price = price;
   renderCart();
 }
 
@@ -155,19 +177,32 @@ function renderCart() {
   if(empty) empty.classList.add('hidden'); 
   cont.innerHTML = '';
   let total = 0;
+  
   cart.forEach((item, idx) => {
-    total += item.qty * item.price;
+    let itemTotal = item.qty * item.price;
+    total += itemTotal;
+    
     cont.innerHTML += `
-      <div class="bg-white p-2 rounded border flex justify-between items-center shadow-sm">
-        <div class="flex-1 pr-2"><p class="text-[11px] font-semibold text-slate-700">${item.name}</p><p class="text-[10px] text-blue-600 font-bold">${item.price.toFixed(2)} ₼</p></div>
-        <div class="flex items-center gap-2 bg-slate-50 p-1 rounded border">
-          <button type="button" onclick="changeQty(${idx}, -1)" class="w-6 h-6 bg-white shadow rounded">-</button>
-          <span class="text-xs font-bold w-4 text-center">${item.qty}</span>
-          <button type="button" onclick="changeQty(${idx}, 1)" class="w-6 h-6 bg-white shadow rounded">+</button>
+      <div class="bg-white p-2 rounded border flex flex-col gap-2 shadow-sm mb-2">
+        <div class="flex justify-between items-center">
+          <p class="text-[11px] font-semibold text-slate-700 leading-tight">${item.name}</p>
+          <button type="button" onclick="changeQty(${idx}, -item.qty)" class="text-rose-500 text-xs font-bold px-1">✕</button>
+        </div>
+        <div class="flex justify-between items-center">
+          <div class="flex items-center gap-1">
+            <span class="text-[10px] text-slate-500">Qiymət (₼):</span>
+            <input type="number" step="0.01" value="${item.price}" onchange="updateCartItemPrice(${idx}, this.value)" class="w-20 text-xs font-bold text-blue-600 border rounded px-1 py-0.5 text-center bg-slate-50 focus:bg-white">
+          </div>
+          <div class="flex items-center gap-2 bg-slate-50 p-1 rounded border">
+            <button type="button" onclick="changeQty(${idx}, -1)" class="w-5 h-5 bg-white shadow rounded text-xs">-</button>
+            <span class="text-xs font-bold w-4 text-center">${item.qty}</span>
+            <button type="button" onclick="changeQty(${idx}, 1)" class="w-5 h-5 bg-white shadow rounded text-xs">+</button>
+          </div>
         </div>
       </div>
     `;
   });
+  
   const cartTotal = document.getElementById('cartTotal');
   if(cartTotal) cartTotal.innerText = total.toFixed(2) + ' ₼';
 }
