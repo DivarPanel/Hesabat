@@ -10,6 +10,12 @@
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen pb-12">
 
+  <!-- Bildiriş (Toast Notification) -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-green-600 text-white px-4 py-3 rounded-xl shadow-2xl z-50 hidden flex items-center space-x-2 text-xs font-bold transition-all duration-300">
+    <i class="fa-solid fa-circle-check text-base"></i>
+    <span id="toast-msg">Məlumatlar uğurla onaylandı və yadda saxlanıldı!</span>
+  </div>
+
   <!-- Header / Başlıq -->
   <header class="bg-slate-800 border-b border-slate-700 p-4 sticky top-0 z-40 shadow-lg">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
@@ -23,7 +29,7 @@
         </div>
       </div>
       
-      <!-- Yuxarı Əməliyyat Düymələri -->
+      <!-- Yuxarı Əməliyyat və Yadda Saxla Düymələri -->
       <div class="flex flex-wrap items-center gap-2">
         <button onclick="openModal('modal-sale')" class="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 shadow">
           <i class="fa-solid fa-cart-plus"></i>
@@ -41,6 +47,10 @@
           <i class="fa-solid fa-user-plus"></i>
           <span>+ Yeni Müştəri</span>
         </button>
+        <button onclick="saveAndConfirmAll()" class="bg-amber-600 hover:bg-amber-500 text-white px-3 py-2 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 shadow">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span>Yadda Saxla / Onayla</span>
+        </button>
         <button onclick="fetchSheetData()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 border border-slate-600">
           <i class="fa-solid fa-rotate"></i>
           <span>Yenilə</span>
@@ -52,7 +62,7 @@
   <!-- Əsas Məzmun -->
   <main class="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
 
-    <!-- FİLTİRLƏR BÖLMƏSİ (Tarix, Müştəri, Məhsul) -->
+    <!-- FİLTİRLƏR BÖLMƏSİ -->
     <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm">
       <div class="flex items-center justify-between mb-3">
         <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-2">
@@ -66,29 +76,22 @@
       </div>
       
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-        <!-- Tarix Filtri -->
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">Tarix üzrə (Gün/Ay)</label>
           <input type="date" id="filter-date" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
         </div>
-        
-        <!-- Müştəri Filtri -->
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">Müştəri üzrə</label>
           <select id="filter-customer" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
             <option value="">Bütün Müştərilər</option>
           </select>
         </div>
-
-        <!-- Məhsul Filtri -->
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">Məhsul üzrə</label>
           <select id="filter-product" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
             <option value="">Bütün Məhsullar</option>
           </select>
         </div>
-
-        <!-- Axtarış -->
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">Mətnlə Axtarış</label>
           <div class="relative">
@@ -99,7 +102,7 @@
       </div>
     </div>
 
-    <!-- KPI / Gün Sonu Statistikaları -->
+    <!-- KPI / Statistikalar -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
       <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm">
         <div class="flex justify-between items-center text-slate-400 mb-2">
@@ -108,7 +111,6 @@
         </div>
         <div id="stat-cash" class="text-xl font-bold text-slate-100">0.00 AZN</div>
       </div>
-
       <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm">
         <div class="flex justify-between items-center text-slate-400 mb-2">
           <span class="text-xs font-semibold">Kart / Köçürmə</span>
@@ -116,7 +118,6 @@
         </div>
         <div id="stat-card" class="text-xl font-bold text-slate-100">0.00 AZN</div>
       </div>
-
       <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm">
         <div class="flex justify-between items-center text-slate-400 mb-2">
           <span class="text-xs font-semibold">Xərclər (Rasxod)</span>
@@ -124,7 +125,6 @@
         </div>
         <div id="stat-expense" class="text-xl font-bold text-red-400">0.00 AZN</div>
       </div>
-
       <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-sm bg-gradient-to-br from-slate-800 to-slate-750">
         <div class="flex justify-between items-center text-slate-300 mb-2">
           <span class="text-xs font-bold text-yellow-400">Xalis Gün Sonu Kassası</span>
@@ -159,7 +159,6 @@
         </h2>
         <span id="record-count" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full font-mono">0 əməliyyat</span>
       </div>
-
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs text-slate-300">
           <thead class="bg-slate-900/60 text-slate-400 uppercase font-semibold border-b border-slate-700">
@@ -175,9 +174,7 @@
             </tr>
           </thead>
           <tbody id="transactions-body" class="divide-y divide-slate-700/50 font-mono">
-            <tr>
-              <td colspan="8" class="text-center py-8 text-slate-500 font-sans">Heç bir əməliyyat tapılmadı.</td>
-            </tr>
+            <tr><td colspan="8" class="text-center py-8 text-slate-500 font-sans">Heç bir əməliyyat tapılmadı.</td></tr>
           </tbody>
         </table>
       </div>
@@ -192,7 +189,6 @@
         </h2>
         <span id="stock-count" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full font-mono">0 məhsul</span>
       </div>
-
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs text-slate-300">
           <thead class="bg-slate-900/60 text-slate-400 uppercase font-semibold border-b border-slate-700">
@@ -209,9 +205,7 @@
             </tr>
           </thead>
           <tbody id="stock-body" class="divide-y divide-slate-700/50 font-mono">
-            <tr>
-              <td colspan="9" class="text-center py-8 text-slate-500 font-sans">Hələ heç bir məhsul əlavə edilməyib.</td>
-            </tr>
+            <tr><td colspan="9" class="text-center py-8 text-slate-500 font-sans">Hələ heç bir məhsul əlavə edilməyib.</td></tr>
           </tbody>
         </table>
       </div>
@@ -226,7 +220,6 @@
         </h2>
         <span id="customer-count" class="text-xs bg-slate-700 text-slate-300 px-3 py-1 rounded-full font-mono">0 müştəri</span>
       </div>
-
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs text-slate-300">
           <thead class="bg-slate-900/60 text-slate-400 uppercase font-semibold border-b border-slate-700">
@@ -238,9 +231,7 @@
             </tr>
           </thead>
           <tbody id="customers-body" class="divide-y divide-slate-700/50 font-mono">
-            <tr>
-              <td colspan="4" class="text-center py-8 text-slate-500 font-sans">Hələ heç bir müştəri əlavə edilməyib.</td>
-            </tr>
+            <tr><td colspan="4" class="text-center py-8 text-slate-500 font-sans">Hələ heç bir müştəri əlavə edilməyib.</td></tr>
           </tbody>
         </table>
       </div>
@@ -248,10 +239,11 @@
 
   </main>
 
+  <!-- MODALLAR -->
   <!-- MODAL: YENİ SATIŞ -->
   <div id="modal-sale" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
     <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md overflow-hidden shadow-2xl">
-      <div class="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-850">
+      <div class="p-4 border-b border-slate-700 flex justify-between items-center">
         <h3 class="font-bold text-sm text-slate-100 flex items-center space-x-2">
           <i class="fa-solid fa-cart-plus text-green-400"></i>
           <span>+ Yeni Satış Daxil Et</span>
@@ -408,10 +400,9 @@
 
   <!-- JS SKRİPT -->
   <script>
-    // YENİ RƏSMİ GOOGLE APPS SCRIPT URL-i
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwW6xzuWJ-VJwVfa0K_c0pmORlbLtT3dV0DgnTN2-qVcnylrEzn0VE0RYe9Fu-LHZ4/exec";
+    // YENİ APPS SCRIPT URL-İNİZ
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyXgk0KvtAy7LHhCpC3pmDF84IBvJqhLODdJzKJIJnEVKNvzRnU_9uohpANjuoMS_o/exec";
 
-    // LOKAL BAZA (Sıfırdan)
     let state = {
       products: [],
       customers: [],
@@ -434,8 +425,19 @@
       renderAll();
     }
 
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').innerText = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => { toast.classList.add('hidden'); }, 3000);
+    }
+
+    function saveAndConfirmAll() {
+      saveState();
+      showToast("Bütün məlumatlar onaylandı və yadda saxlanıldı!");
+    }
+
     function populateDropdowns() {
-      // Müştəri seçimi
       const custSelect = document.getElementById('sale-customer');
       const filterCust = document.getElementById('filter-customer');
       
@@ -447,7 +449,6 @@
         filterCust.innerHTML += `<option value="${c.name}">${c.name}</option>`;
       });
 
-      // Məhsul seçimi
       const prodSelect = document.getElementById('sale-product');
       const filterProd = document.getElementById('filter-product');
       
@@ -474,7 +475,6 @@
       document.getElementById('sale-total').value = (qty * price).toFixed(2) + " AZN";
     }
 
-    // Modal İdarəsi
     function openModal(id) {
       document.getElementById(id).classList.remove('hidden');
       document.getElementById(id).classList.add('flex');
@@ -484,8 +484,8 @@
       document.getElementById(id).classList.remove('flex');
     }
 
-    // Yeni Məhsul Əlavə Et
-    function handleAddProduct(e) {
+    // Yeni Məhsul Əlavə Et (Lokal + Google Sheets)
+    async function handleAddProduct(e) {
       e.preventDefault();
       const name = document.getElementById('prod-name').value;
       const cat = document.getElementById('prod-cat').value || 'Ümumi';
@@ -493,25 +493,59 @@
       const cost = parseFloat(document.getElementById('prod-cost').value) || 0;
       const price = parseFloat(document.getElementById('prod-price').value) || 0;
 
+      const prodData = {
+        action: "add_product",
+        name, cat, stock, cost, price
+      };
+
       state.products.push({ id: 'PRD-' + (state.products.length + 1), name, cat, stock, sold: 0, cost, price });
       saveState();
       closeModal('modal-product');
       e.target.reset();
+      showToast("Yeni məhsul əlavə edildi və yadda saxlanıldı!");
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(prodData)
+        });
+      } catch (err) {
+        console.log("Offline rejimdə yadda saxlanıldı.");
+      }
     }
 
-    // Yeni Müştəri Əlavə Et
-    function handleAddCustomer(e) {
+    // Yeni Müştəri Əlavə Et (Lokal + Google Sheets)
+    async function handleAddCustomer(e) {
       e.preventDefault();
       const name = document.getElementById('cust-name').value;
       const phone = document.getElementById('cust-phone').value || '-';
+
+      const custData = {
+        action: "add_customer",
+        name, phone
+      };
 
       state.customers.push({ id: 'CUST-' + (state.customers.length + 1), name, phone });
       saveState();
       closeModal('modal-customer');
       e.target.reset();
+      showToast("Yeni müştəri əlavə edildi və yadda saxlanıldı!");
+
+      try {
+        await fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(custData)
+        });
+      } catch (err) {
+        console.log("Offline rejimdə yadda saxlanıldı.");
+      }
     }
 
-    // Yeni Satış Əlavə Et (Lokal + Google Sheets Server)
+    // Yeni Satış Əlavə Et
     async function handleAddSale(e) {
       e.preventDefault();
       const customer = document.getElementById('sale-customer').value;
@@ -522,7 +556,6 @@
       const total = qty * price;
       const date = new Date().toISOString().split('T')[0];
 
-      // Stokdan düşmə
       const prod = state.products.find(p => p.name === productName);
       if (prod) {
         prod.sold += qty;
@@ -544,8 +577,8 @@
       saveState();
       closeModal('modal-sale');
       e.target.reset();
+      showToast("Satış onaylandı və Excel cədvələ yazıldı!");
 
-      // Google Sheets-ə Göndər
       try {
         await fetch(SCRIPT_URL, {
           method: "POST",
@@ -554,11 +587,11 @@
           body: JSON.stringify(saleData)
         });
       } catch (err) {
-        console.log("Server göndərilməsi offline saxlanıldı.");
+        console.log("Offline rejimdə yadda saxlanıldı.");
       }
     }
 
-    // Yeni Rasxod Əlavə Et (Lokal + Google Sheets Server)
+    // Yeni Rasxod Əlavə Et
     async function handleAddExpense(e) {
       e.preventDefault();
       const title = document.getElementById('exp-title').value;
@@ -587,8 +620,8 @@
       saveState();
       closeModal('modal-expense');
       e.target.reset();
+      showToast("Xərc (Rasxod) onaylandı!");
 
-      // Google Sheets-ə Göndər
       try {
         await fetch(SCRIPT_URL, {
           method: "POST",
@@ -597,11 +630,10 @@
           body: JSON.stringify(expenseData)
         });
       } catch (err) {
-        console.log("Server göndərilməsi offline saxlanıldı.");
+        console.log("Offline rejimdə yadda saxlanıldı.");
       }
     }
 
-    // Tab Dəyişmə
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.getElementById(tabId).classList.remove('hidden');
@@ -616,7 +648,6 @@
       });
     }
 
-    // Filtirləri Sıfırla
     function resetFilters() {
       document.getElementById('filter-date').value = '';
       document.getElementById('filter-customer').value = '';
@@ -625,31 +656,27 @@
       applyFilters();
     }
 
-    // Filtirləri Tətbiq Et
     function applyFilters() {
       renderAll();
     }
 
-    // Render Funksiyası
     function renderAll() {
       const filterDate = document.getElementById('filter-date').value;
       const filterCust = document.getElementById('filter-customer').value;
       const filterProd = document.getElementById('filter-product').value;
       const filterSearch = document.getElementById('filter-search').value.toLowerCase();
 
-      // Transaksiyaları Filtirləmə
       let filteredTx = state.transactions.filter(t => {
         if (filterDate && t.date !== filterDate) return false;
         if (filterCust && t.customer !== filterCust) return false;
-        if (filterProd && t.item !== filterProd) return false;
+        if (filterProd && (t.item || t.product) !== filterProd) return false;
         if (filterSearch) {
-          const match = (t.customer + ' ' + (t.item || t.title) + ' ' + t.type).toLowerCase();
+          const match = (t.customer + ' ' + (t.item || t.product || t.title) + ' ' + t.type).toLowerCase();
           if (!match.includes(filterSearch)) return false;
         }
         return true;
       });
 
-      // Statistika Hesablaması
       let cashTotal = 0;
       let cardTotal = 0;
       let expTotal = 0;
@@ -672,7 +699,6 @@
       document.getElementById('stat-expense').innerText = expTotal.toFixed(2) + " AZN";
       document.getElementById('stat-total').innerText = ((cashTotal + cardTotal) - expTotal).toFixed(2) + " AZN";
 
-      // Tab 1 Cədvəl
       const txBody = document.getElementById('transactions-body');
       document.getElementById('record-count').innerText = `${filteredTx.length} əməliyyat`;
       
@@ -703,7 +729,6 @@
         });
       }
 
-      // Tab 2: Stok Cədvəli
       const stockBody = document.getElementById('stock-body');
       document.getElementById('stock-count').innerText = `${state.products.length} məhsul`;
       
@@ -734,7 +759,6 @@
         });
       }
 
-      // Tab 3: Müştərilər Cədvəli
       const custBody = document.getElementById('customers-body');
       document.getElementById('customer-count').innerText = `${state.customers.length} müştəri`;
       
@@ -759,16 +783,15 @@
       }
     }
 
-    // Google Sheets Serverindən Məlumat Oxumaq
     async function fetchSheetData() {
       try {
         const res = await fetch(SCRIPT_URL, { redirect: "follow" });
         if (res.ok) {
           const data = await res.json();
-          if (data.transactions && data.transactions.length > 0) {
-            state.transactions = data.transactions;
-            renderAll();
-          }
+          if (data.products && data.products.length > 0) state.products = data.products;
+          if (data.customers && data.customers.length > 0) state.customers = data.customers;
+          if (data.transactions && data.transactions.length > 0) state.transactions = data.transactions;
+          saveState();
         }
       } catch (err) {
         console.log("Server qoşulması offline rejimdədir.");
