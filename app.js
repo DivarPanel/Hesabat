@@ -424,5 +424,5 @@ function sendWhatsApp() {
 }
 
 function downloadExcel() {
-  window.location.href = "DivarPanel_Stoklu_Baza.xlsx";
+  window.location.href = "DivarPanel_Final_Sablon.xlsx";
 }
