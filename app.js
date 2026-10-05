@@ -1,4 +1,4 @@
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby1D6XyupIuM0YNFvd2TVHZ-ErphAePKpeATZDV-ja0Fy6mEmhZDCaiHC1IwmsC8S-QHw/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyCoiP_l_UYQb2VfEW-UEwqKfjq4C1NPJjXLFuovBtkS4iERc2i0lTqpiSF4ebQzMlNqQ/exec";
 
 let currentUser = null; 
 let cart = [];
