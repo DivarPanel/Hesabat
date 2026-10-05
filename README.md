@@ -1,59 +1,25 @@
-# DecorConcept POS — Real Database Edition
+# DecorConcept POS — V2
 
-Bu paket Google Sheets-dən asılı deyil. Arxitektura:
+Google Sheetssiz, Supabase PostgreSQL + Edge Function əsaslı POS.
 
-GitHub Pages → Supabase Edge Function → PostgreSQL
-
-## Paket
-- `frontend/index.html` — POS interfeysi
-- `frontend/app.js` — frontend məntiqi
-- `frontend/config.js` — yalnız public Supabase URL/key
-- `supabase/schema.sql` — database, RLS, atomic əməliyyatlar
-- `supabase/functions/api/index.ts` — server API
+## V2 imkanları
+- Giriş ekranında hazır PIN yazısı yoxdur; kodu istifadəçi özü daxil edir.
+- Cəld satış.
+- Cəld mal qəbul.
+- Çoxlu anbar dəstəyi: satış və mədaxildə anbar seçilir.
+- Qaytarma.
+- Qaiməyə baxış və çap.
+- Admin üçün qaimə dəyişdirmə: müştəri, anbar, ödəniş, endirim, məhsul miqdarı və qiymət.
+- Ana səhifədə ən çox satılan məhsul və ən çox alver olan gün.
+- Enter ilə sürətli məhsul seçimi.
+- Server vaxtı Asia/Baku.
 
 ## Quraşdırma
-
-1. Supabase-də yeni project yaradın.
-2. SQL Editor → `supabase/schema.sql` faylının hamısını bir dəfə işlədin.
-3. Supabase CLI ilə Edge Function deploy edin:
-   `supabase functions deploy api`
-4. Edge Function üçün `SUPABASE_SERVICE_ROLE_KEY` secret təyin edin. Bu açarı GitHub frontend-ə qoymayın.
-   Supabase Dashboard → Edge Functions → api → Secrets bölməsindən əlavə edin.
-5. `frontend/config.js` içində:
-   - `SUPABASE_URL`
-   - public/anon key
-   dəyərlərini yazın.
-6. `frontend` qovluğunun məzmununu GitHub repository-yə yerləşdirin.
-7. GitHub Pages-i həmin repository üçün aktiv edin.
-
-## İlk PIN-lər
-- Bəhram / admin: 3285
-- Sadiq / staff: 2255
-
-İlk girişdən sonra PIN-ləri dəyişdirmək üçün ayrıca admin ekranı əlavə etmək tövsiyə olunur.
-
-## Tarix və saat
-Əməliyyatların timestamp-i PostgreSQL `timestamptz` ilə saxlanılır. Hesabat və server vaxtı `Asia/Baku` timezone-u ilə hesablanır. Browser `new Date()` satış tarixi üçün istifadə edilmir.
+1. Supabase-də mövcud əsas schema artıq qurulubsa, `supabase/migration_v2.sql` faylını SQL Editor-da bir dəfə işlədin.
+2. `supabase/functions/api/index.ts` kodunu `api` Edge Function-a deploy edin.
+3. Edge Function secret olaraq `SUPABASE_SERVICE_ROLE_KEY` təyin edin.
+4. `frontend/config.js` artıq layihənin URL və publishable key-i ilə doldurulub.
+5. `frontend` qovluğunu GitHub Pages-də yayımlayın.
 
 ## Vacib
-Bu paket deploy-ready skelet və işlək əsas POS axınıdır. Production-a keçməzdən əvvəl:
-- PIN dəyişmə ekranı
-- rol üzrə daha detallı icazələr
-- qaytarma və qaimə redaktəsi
-- xərc ekranı
-- müştəri borc ödənişi
-- audit log
-- backup siyasəti
-əlavə edilməlidir.
-
-
-## Bu paketdə artıq nə hazırdır
-- `frontend/config.js` Supabase Project URL və publishable key ilə doldurulub.
-- Frontend Google Sheets istifadə etmir.
-- Business əməliyyatları Edge Function üzərindən PostgreSQL-ə gedir.
-
-## İlk işə salma
-1. Supabase SQL Editor-də `supabase/schema.sql` faylının hamısını bir dəfə işlədin.
-2. `supabase/functions/api/index.ts` funksiyasını `api` adı ilə deploy edin.
-3. Edge Function secrets bölməsində `SUPABASE_SERVICE_ROLE_KEY` təyin edin.
-4. `frontend` qovluğunu GitHub Pages və ya başqa statik hostingə yerləşdirin.
+`SUPABASE_SERVICE_ROLE_KEY` heç vaxt frontend-ə yerləşdirilməməlidir.
