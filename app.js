@@ -4,6 +4,7 @@ let currentUser = null;
 let cart = [];
 let productsList = [];
 let transactionsList = [];
+let globalDiscount = 0;
 
 document.addEventListener("DOMContentLoaded", () => {
   loadDataFromSheets();
@@ -76,21 +77,20 @@ function logout() {
   document.querySelectorAll('.admin-only').forEach(el => el.classList.add('hidden'));
 }
 
-// Pəncərələr arası keçid (Kompüter və Mobil üçün uyğunlaşdırılmış)
 function nav(target) {
   document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
   const targetView = document.getElementById('view-' + target);
   if(targetView) targetView.classList.remove('hidden');
   
-  // Masaüstü və mobil naviqasiya düymələrinin aktivlik rəngləri
   document.querySelectorAll('.nav-btn').forEach(btn => {
     if (btn.dataset.target === target) {
-      btn.classList.add('text-blue-600', 'bg-slate-800', 'text-white', 'font-bold');
+      btn.classList.add('text-blue-600', 'font-bold');
+      if(window.innerWidth >= 768) {
+        btn.classList.add('bg-slate-800', 'text-white');
+      }
     } else {
       btn.classList.remove('text-blue-600', 'bg-slate-800', 'text-white', 'font-bold');
-      if(window.innerWidth < 768) {
-        btn.classList.add('text-slate-500');
-      }
+      btn.classList.add('text-slate-500');
     }
   });
 }
@@ -167,6 +167,11 @@ function updateCartItemPrice(index, newPrice) {
   renderCart();
 }
 
+function updateDiscount(val) {
+  globalDiscount = parseFloat(val) || 0;
+  renderCart();
+}
+
 function renderCart() {
   const cont = document.getElementById('cartItems');
   const empty = document.getElementById('emptyCart');
@@ -181,35 +186,38 @@ function renderCart() {
   }
   if(empty) empty.classList.add('hidden'); 
   cont.innerHTML = '';
-  let total = 0;
+  let subtotal = 0;
   
   cart.forEach((item, idx) => {
     let itemTotal = item.qty * item.price;
-    total += itemTotal;
+    subtotal += itemTotal;
     
     cont.innerHTML += `
-      <div class="bg-white p-2 rounded border flex flex-col gap-2 shadow-sm mb-2">
+      <div class="bg-white p-2.5 rounded-xl border flex flex-col gap-2 shadow-sm mb-2">
         <div class="flex justify-between items-center">
-          <p class="text-[11px] font-semibold text-slate-700 leading-tight">${item.name}</p>
-          <button type="button" onclick="changeQty(${idx}, -item.qty)" class="text-rose-500 text-xs font-bold px-1">✕</button>
+          <p class="text-xs font-semibold text-slate-700 leading-tight">${item.name}</p>
+          <button type="button" onclick="changeQty(${idx}, -item.qty)" class="text-rose-500 text-xs font-bold px-1.5 py-0.5 hover:bg-rose-50 rounded">✕</button>
         </div>
         <div class="flex justify-between items-center">
-          <div class="flex items-center gap-1">
+          <div class="flex items-center gap-1.5">
             <span class="text-[10px] text-slate-500">Qiymət (₼):</span>
-            <input type="number" step="0.01" value="${item.price}" onchange="updateCartItemPrice(${idx}, this.value)" class="w-20 text-xs font-bold text-blue-600 border rounded px-1 py-0.5 text-center bg-slate-50 focus:bg-white">
+            <input type="number" step="0.01" value="${item.price}" onchange="updateCartItemPrice(${idx}, this.value)" class="w-20 text-xs font-bold text-blue-600 border rounded-lg px-1.5 py-1 text-center bg-slate-50 focus:bg-white focus:border-blue-500">
           </div>
-          <div class="flex items-center gap-2 bg-slate-50 p-1 rounded border">
-            <button type="button" onclick="changeQty(${idx}, -1)" class="w-5 h-5 bg-white shadow rounded text-xs">-</button>
+          <div class="flex items-center gap-2 bg-slate-50 p-1 rounded-lg border">
+            <button type="button" onclick="changeQty(${idx}, -1)" class="w-6 h-6 bg-white shadow-sm rounded-md text-xs font-bold">-</button>
             <span class="text-xs font-bold w-4 text-center">${item.qty}</span>
-            <button type="button" onclick="changeQty(${idx}, 1)" class="w-5 h-5 bg-white shadow rounded text-xs">+</button>
+            <button type="button" onclick="changeQty(${idx}, 1)" class="w-6 h-6 bg-white shadow-sm rounded-md text-xs font-bold">+</button>
           </div>
         </div>
       </div>
     `;
   });
   
+  let finalTotal = subtotal - globalDiscount;
+  if(finalTotal < 0) finalTotal = 0;
+
   const cartTotal = document.getElementById('cartTotal');
-  if(cartTotal) cartTotal.innerText = total.toFixed(2) + ' ₼';
+  if(cartTotal) cartTotal.innerText = finalTotal.toFixed(2) + ' ₼';
 }
 
 async function processSale() {
@@ -254,7 +262,10 @@ async function processSale() {
   await sendToGoogleSheets(payload);
   document.getElementById('invoiceModal').classList.remove('hidden');
   cart = []; 
+  globalDiscount = 0;
   document.getElementById('custName').value = '';
+  const discInp = document.getElementById('discountInput');
+  if(discInp) discInp.value = '';
   renderCart(); renderProducts(); renderStockTable(); renderReportsTable(); renderDashboardStats();
 }
 
