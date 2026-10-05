@@ -254,11 +254,16 @@
           <div class="flex justify-between items-center">
             <div>
               <h1 class="text-base sm:text-lg font-bold text-slate-900">Əməliyyatlar</h1>
-              <p class="text-[11px] text-slate-500">Bütün əməliyyat tarixçəsi</p>
+              <p class="text-[11px] text-slate-500">Bütün əməliyyat tarixçəsi (Qaimələrə baxmaq üçün üzərinə klikləyin)</p>
             </div>
-            <button onclick="document.getElementById('expenseModal').classList.remove('hidden')" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm transition-all active:scale-95">
-              <i class="fa-solid fa-minus mr-1"></i> Xərc Əlavə Et
-            </button>
+            <div class="flex gap-2">
+              <button onclick="document.getElementById('refundModal').classList.remove('hidden')" class="bg-purple-600 hover:bg-purple-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm transition-all active:scale-95">
+                <i class="fa-solid fa-rotate-left mr-1"></i> Geri Qaytarma
+              </button>
+              <button onclick="document.getElementById('expenseModal').classList.remove('hidden')" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm transition-all active:scale-95">
+                <i class="fa-solid fa-minus mr-1"></i> Xərc Əlavə Et
+              </button>
+            </div>
           </div>
 
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -310,6 +315,8 @@
   </div>
 
   <!-- MODALLAR -->
+
+  <!-- Qaimə / Invoice Modal -->
   <div id="invoiceModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-5 space-y-4">
       <div class="text-center">
@@ -342,6 +349,7 @@
     </div>
   </div>
 
+  <!-- Stok (Prixod) Modal -->
   <div id="stockModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4">
       <h3 class="text-sm font-bold text-slate-900">Yeni Mal Mədaxil Et</h3>
@@ -366,6 +374,7 @@
     </div>
   </div>
 
+  <!-- Xərc Modal -->
   <div id="expenseModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4">
       <h3 class="text-sm font-bold text-slate-900">Kassa Xərci Əlavə Et</h3>
@@ -393,6 +402,7 @@
     </div>
   </div>
 
+  <!-- Günün Sonu Modal -->
   <div id="dayEndModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4 text-center">
       <div>
@@ -410,6 +420,70 @@
     </div>
   </div>
 
+  <!-- Geri Qaytarma Modal -->
+  <div id="refundModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4">
+      <h3 class="text-sm font-bold text-slate-900">Məhsul Geri Qaytarma</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="text-[10px] font-semibold text-slate-500 uppercase">Məhsul Adı</label>
+          <input type="text" id="refProdName" placeholder="Məhsulun adı" class="w-full mt-1 px-3 py-2 border rounded-xl text-xs focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="text-[10px] font-semibold text-slate-500 uppercase">Miqdar</label>
+          <input type="number" id="refQty" placeholder="Ədəd" class="w-full mt-1 px-3 py-2 border rounded-xl text-xs focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="text-[10px] font-semibold text-slate-500 uppercase">Qaytarılacaq Məbləğ (₼)</label>
+          <input type="number" step="0.01" id="refAmount" placeholder="0.00" class="w-full mt-1 px-3 py-2 border rounded-xl text-xs focus:outline-none focus:border-blue-500">
+        </div>
+        <div>
+          <label class="text-[10px] font-semibold text-slate-500 uppercase">Müştəri Adı</label>
+          <input type="text" id="refCust" placeholder="Müştəri adı" class="w-full mt-1 px-3 py-2 border rounded-xl text-xs focus:outline-none focus:border-blue-500">
+        </div>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button onclick="processRefund()" class="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 rounded-xl text-xs">Təsdiq Et</button>
+        <button onclick="closeModal('refundModal')" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl text-xs">İmtina</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Qaimə Detalları Baxış Modalı -->
+  <div id="invoiceDetailModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-5 space-y-4">
+      <div class="flex justify-between items-center border-b pb-3">
+        <div>
+          <h3 id="detailInvNo" class="text-sm font-bold text-slate-900">INV-000000</h3>
+          <p id="detailDate" class="text-[10px] text-slate-500">-</p>
+        </div>
+        <button onclick="closeModal('invoiceDetailModal')" class="text-slate-400 hover:text-slate-600 text-sm font-bold">✕</button>
+      </div>
+      <div class="bg-slate-50 p-3 rounded-xl space-y-1.5 text-xs border">
+        <div class="flex justify-between"><span class="text-slate-500">Müştəri:</span> <span id="detailCust" class="font-bold">-</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Satıcı:</span> <span id="detailUser" class="font-bold">-</span></div>
+      </div>
+      <div class="max-h-48 overflow-y-auto border-t border-b py-2">
+        <table class="w-full text-left text-xs">
+          <thead class="text-slate-400 text-[10px]">
+            <tr>
+              <th>Məhsul</th>
+              <th class="text-center">Miqdar</th>
+              <th class="text-right">Qiymət</th>
+              <th class="text-right">Yekun</th>
+            </tr>
+          </thead>
+          <tbody id="detailItemsTable"></tbody>
+        </table>
+      </div>
+      <div class="flex justify-between items-center font-bold text-sm text-slate-900 pt-1">
+        <span>Yekun Məbləğ:</span> <span id="detailTotal" class="text-blue-600 text-base">0.00 ₼</span>
+      </div>
+      <button onclick="closeModal('invoiceDetailModal')" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 rounded-xl text-xs">Bağla</button>
+    </div>
+  </div>
+
+  <!-- JavaScript Faylı -->
   <script src="app.js"></script>
 </body>
 </html>
