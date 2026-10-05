@@ -5,6 +5,7 @@ let cart = [];
 let productsList = [];
 let transactionsList = [];
 let globalDiscount = 0;
+let currentEditingInvoice = null;
 
 document.addEventListener("DOMContentLoaded", () => {
   loadDataFromSheets();
@@ -34,6 +35,7 @@ async function loadDataFromSheets() {
       renderStockTable();
       renderReportsTable();
       renderDashboardStats();
+      populateRefundSelect();
       showToast("Baza ilə uğurla sinxronlaşdırıldı!", "emerald");
     } else {
       showToast("Bazadan məlumat oxunmadı.", "rose");
@@ -129,6 +131,16 @@ function renderStockTable() {
         <td class="p-3 text-right">${Number(p.price).toFixed(2)} ₼</td>
       </tr>
     `;
+  });
+  populateRefundSelect();
+}
+
+function populateRefundSelect() {
+  const select = document.getElementById('refProdName');
+  if(!select) return;
+  select.innerHTML = '<option value="">Məhsul seçin...</option>';
+  productsList.forEach(p => {
+    select.innerHTML += `<option value="${p.name}">${p.name} (Stok: ${p.stock})</option>`;
   });
 }
 
@@ -240,11 +252,10 @@ async function processSale() {
     items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price, total: i.qty * i.price }))
   };
 
-  cart.forEach(i => {
-    transactionsList.push({
-      date: saleDate, type: "Satış", user: currentUser.name, target: custName,
-      product: i.name, qty: i.qty, price: i.price, total: i.qty * i.price, payment: payMethod, invoice: invoiceNo
-    });
+  transactionsList.push({
+    date: saleDate, type: "Satış", user: currentUser.name, target: custName,
+    product: `Qaimə: ${invoiceNo} (${cart.length} məhsul)`, qty: cart.reduce((sum, i) => sum + i.qty, 0), 
+    price: "-", total: totalAmt, payment: payMethod, invoice: invoiceNo, items: [...cart]
   });
 
   document.getElementById('invCust').innerText = custName;
@@ -294,7 +305,7 @@ async function processStockIn() {
   await sendToGoogleSheets(payload);
   document.getElementById('stockProdName').value = '';
   document.getElementById('stockQty').value = '';
-  renderProducts(); renderStockTable(); renderReportsTable();
+  renderProducts(); renderStockTable(); renderReportsTable(); renderDashboardStats();
   alert("Mal uğurla əlavə olundu və bazaya yazıldı!");
 }
 
@@ -329,22 +340,22 @@ async function processExpense() {
   renderReportsTable(); renderDashboardStats();
 }
 
-// GƏRİ QAYTARMA (REFUND) FUNKSİYASI
+// GERİ QAYTARMA
 async function processRefund() {
-  const prodName = document.getElementById('refProdName').value.trim();
+  const prodName = document.getElementById('refProdName').value;
   const qty = parseInt(document.getElementById('refQty').value);
   const amount = parseFloat(document.getElementById('refAmount').value);
   const custName = document.getElementById('refCust').value.trim() || 'Müştəri';
 
   if (!prodName || isNaN(qty) || isNaN(amount)) {
-    alert("Məlumatları tam doldurun!");
+    alert("Məlumatları tam doldurun və məhsul seçin!");
     return;
   }
 
   const refDate = new Date().toLocaleString('az-AZ');
   let p = productsList.find(x => x.name.toLowerCase() === prodName.toLowerCase());
   if (p) {
-    p.stock += qty; // Məhsul geri qayıtdığı üçün anbar stoku artır
+    p.stock += qty; // Anbar stoku artır
   }
 
   transactionsList.push({
@@ -353,7 +364,7 @@ async function processRefund() {
   });
 
   const payload = {
-    action: "ADD_EXPENSE", // Və ya Apps Script-də geri qaytarma olaraq işlənir
+    action: "ADD_EXPENSE",
     date: refDate,
     user: currentUser.name, description: `Geri qaytarma: ${prodName} (${custName})`, amount: amount, paymentType: "Nağd"
   };
@@ -367,6 +378,80 @@ async function processRefund() {
   await sendToGoogleSheets(payload);
   renderProducts(); renderStockTable(); renderReportsTable(); renderDashboardStats();
   alert("Geri qaytarma qeydə alındı və anbar stoku yeniləndi!");
+}
+
+// QAİMƏ DETALLARI VƏ REDAKTƏSİ
+function viewInvoiceDetails(invoiceNo) {
+  const trx = transactionsList.find(t => t.invoice === invoiceNo);
+  if (!trx) return;
+  currentEditingInvoice = trx;
+
+  document.getElementById('detailInvNo').innerText = trx.invoice;
+  document.getElementById('detailCust').innerText = trx.target;
+  document.getElementById('detailUser').innerText = trx.user;
+  document.getElementById('detailDate').innerText = trx.date;
+  document.getElementById('detailTotal').innerText = Number(trx.total).toFixed(2) + " ₼";
+
+  renderDetailItems();
+  document.getElementById('invoiceDetailModal').classList.remove('hidden');
+}
+
+function renderDetailItems() {
+  const tbody = document.getElementById('detailItemsTable');
+  if(!tbody) return;
+  tbody.innerHTML = '';
+  
+  if (currentEditingInvoice && currentEditingInvoice.items && currentEditingInvoice.items.length > 0) {
+    currentEditingInvoice.items.forEach((item, idx) => {
+      tbody.innerHTML += `
+        <tr class="border-b">
+          <td class="py-1.5">${item.name}</td>
+          <td class="text-center">
+            <input type="number" min="1" value="${item.qty}" onchange="updateInvoiceItemQty(${idx}, this.value)" class="w-14 text-center border rounded text-xs py-0.5">
+          </td>
+          <td class="text-right">
+            <input type="number" step="0.01" value="${item.price}" onchange="updateInvoiceItemPrice(${idx}, this.value)" class="w-20 text-right border rounded text-xs py-0.5">
+          </td>
+          <td class="text-right font-bold">${(item.qty * item.price).toFixed(2)} ₼</td>
+        </tr>
+      `;
+    });
+  } else {
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-2 text-slate-400">${currentEditingInvoice.product}</td></tr>`;
+  }
+}
+
+function updateInvoiceItemQty(idx, val) {
+  const qty = parseInt(val);
+  if (isNaN(qty) || qty <= 0) return;
+  currentEditingInvoice.items[idx].qty = qty;
+  recalculateInvoiceTotal();
+}
+
+function updateInvoiceItemPrice(idx, val) {
+  const price = parseFloat(val);
+  if (isNaN(price) || price < 0) return;
+  currentEditingInvoice.items[idx].price = price;
+  recalculateInvoiceTotal();
+}
+
+function recalculateInvoiceTotal() {
+  let total = 0;
+  if(currentEditingInvoice.items) {
+    currentEditingInvoice.items.forEach(i => {
+      total += i.qty * i.price;
+    });
+  }
+  currentEditingInvoice.total = total;
+  document.getElementById('detailTotal').innerText = total.toFixed(2) + " ₼";
+}
+
+function saveInvoiceChanges() {
+  if (!currentEditingInvoice) return;
+  closeModal('invoiceDetailModal');
+  renderReportsTable();
+  renderDashboardStats();
+  showToast("Qaimə məlumatları yeniləndi!", "emerald");
 }
 
 function renderReportsTable() {
@@ -384,13 +469,15 @@ function renderReportsTable() {
     if(trx.type.includes("Mədaxil")) badgeColor = "bg-amber-100 text-amber-700";
     if(trx.type === "Geri Qaytarma") badgeColor = "bg-purple-100 text-purple-700";
 
+    let rowClick = trx.invoice && trx.invoice !== "-" ? `onclick="viewInvoiceDetails('${trx.invoice}')" class="border-b hover:bg-slate-50 cursor-pointer"` : `class="border-b hover:bg-slate-50"`;
+
     tbody.innerHTML += `
-      <tr class="border-b hover:bg-slate-50">
+      <tr ${rowClick}>
         <td class="p-2.5 text-slate-500">${trx.date}</td>
         <td class="p-2.5"><span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${badgeColor}">${trx.type}</span></td>
         <td class="p-2.5">${trx.user}</td>
         <td class="p-2.5">${trx.target}</td>
-        <td class="p-2.5 font-medium">${trx.product}</td>
+        <td class="p-2.5 font-medium underline decoration-dotted">${trx.product}</td>
         <td class="p-2.5 text-center">${trx.qty}</td>
         <td class="p-2.5 text-right font-bold">${trx.total !== "-" ? Number(trx.total).toFixed(2) + " ₼" : "-"}</td>
         <td class="p-2.5 text-slate-500">${trx.payment}</td>
@@ -399,17 +486,13 @@ function renderReportsTable() {
   });
 }
 
-// TƏKMİLLƏŞDİRİLMİŞ DASHBOARD HESABLAMALARI (Tarix uyğunlaşdırması ilə)
+// DASHBOARD HESABLAMALARI
 function renderDashboardStats() {
   const now = new Date();
   const day = String(now.getDate()).padStart(2, '0');
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const year = now.getFullYear();
   
-  // Müxtəlif tarix formatlarını dəstəkləmək üçün yoxlama (məs: "05.10.2026" və ya "10.05.2026")
-  const datePattern1 = `${day}.${month}.${year}`;
-  const datePattern2 = `${month}/${day}/${year}`;
-
   const dateElem = document.getElementById('todayDateStr');
   if(dateElem) dateElem.innerText = `${day}.${month}.${year}`;
 
@@ -418,10 +501,14 @@ function renderDashboardStats() {
   let todaySalesItems = [];
 
   transactionsList.forEach(trx => {
-    if(trx.date && (trx.date.includes(datePattern1) || trx.date.includes(datePattern2) || trx.date.includes(`${day}.${month}`))) {
+    if(trx.date && (trx.date.includes(`${day}.${month}`) || trx.date.includes(`${day}/${month}`))) {
       if(trx.type === "Satış") {
         todaySalesTotal += Number(trx.total) || 0;
-        todaySalesItems.push(trx);
+        if(trx.items && Array.isArray(trx.items)) {
+          trx.items.forEach(i => todaySalesItems.push({ date: trx.date, product: i.name, qty: i.qty, price: i.price, total: i.qty * i.price }));
+        } else {
+          todaySalesItems.push(trx);
+        }
       } else if(trx.type === "Xərc" || trx.type === "Geri Qaytarma") {
         todayExpensesTotal += Number(trx.total) || 0;
       }
@@ -448,8 +535,8 @@ function renderDashboardStats() {
             <td class="p-2.5 text-slate-500">${item.date}</td>
             <td class="p-2.5 font-medium">${item.product}</td>
             <td class="p-2.5 text-center">${item.qty}</td>
-            <td class="p-2.5 text-right">${Number(item.price).toFixed(2)} ₼</td>
-            <td class="p-2.5 text-right font-bold text-emerald-600">${Number(item.total).toFixed(2)} ₼</td>
+            <td class="p-2.5 text-right">${Number(item.price || 0).toFixed(2)} ₼</td>
+            <td class="p-2.5 text-right font-bold text-emerald-600">${Number(item.total || 0).toFixed(2)} ₼</td>
           </tr>
         `;
       });
@@ -462,7 +549,7 @@ function dayEndReport() {
   const day = String(now.getDate()).padStart(2, '0');
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const year = now.getFullYear();
-  const datePattern = `${day}.${month}.${year}`;
+  const datePattern = `${day}.${month}`;
 
   let sales = 0, expenses = 0;
   
@@ -510,7 +597,7 @@ function closeModal(id) {
 }
 
 function sendWhatsApp() {
-  const invTotal = document.getElementById('invTotal');
+  const invTotal = document.getElementById('detailTotal') || document.getElementById('invTotal');
   const totalVal = invTotal ? invTotal.innerText : '0.00 ₼';
   window.open(`https://wa.me/?text=DecorConcept%20Qaiməsi%20-%20Yekun:%20${totalVal}`, '_blank');
 }
