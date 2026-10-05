@@ -329,6 +329,46 @@ async function processExpense() {
   renderReportsTable(); renderDashboardStats();
 }
 
+// GƏRİ QAYTARMA (REFUND) FUNKSİYASI
+async function processRefund() {
+  const prodName = document.getElementById('refProdName').value.trim();
+  const qty = parseInt(document.getElementById('refQty').value);
+  const amount = parseFloat(document.getElementById('refAmount').value);
+  const custName = document.getElementById('refCust').value.trim() || 'Müştəri';
+
+  if (!prodName || isNaN(qty) || isNaN(amount)) {
+    alert("Məlumatları tam doldurun!");
+    return;
+  }
+
+  const refDate = new Date().toLocaleString('az-AZ');
+  let p = productsList.find(x => x.name.toLowerCase() === prodName.toLowerCase());
+  if (p) {
+    p.stock += qty; // Məhsul geri qayıtdığı üçün anbar stoku artır
+  }
+
+  transactionsList.push({
+    date: refDate, type: "Geri Qaytarma", user: currentUser.name, target: custName,
+    product: prodName, qty: qty, price: amount / qty, total: amount, payment: "Nağd", invoice: "REF-" + Date.now().toString().slice(-6)
+  });
+
+  const payload = {
+    action: "ADD_EXPENSE", // Və ya Apps Script-də geri qaytarma olaraq işlənir
+    date: refDate,
+    user: currentUser.name, description: `Geri qaytarma: ${prodName} (${custName})`, amount: amount, paymentType: "Nağd"
+  };
+
+  closeModal('refundModal');
+  document.getElementById('refProdName').value = '';
+  document.getElementById('refQty').value = '';
+  document.getElementById('refAmount').value = '';
+  document.getElementById('refCust').value = '';
+
+  await sendToGoogleSheets(payload);
+  renderProducts(); renderStockTable(); renderReportsTable(); renderDashboardStats();
+  alert("Geri qaytarma qeydə alındı və anbar stoku yeniləndi!");
+}
+
 function renderReportsTable() {
   const tbody = document.getElementById('allTransactionsTableBody');
   if(!tbody) return;
@@ -342,6 +382,7 @@ function renderReportsTable() {
     if(trx.type === "Satış") badgeColor = "bg-emerald-100 text-emerald-700";
     if(trx.type === "Xərc") badgeColor = "bg-rose-100 text-rose-700";
     if(trx.type.includes("Mədaxil")) badgeColor = "bg-amber-100 text-amber-700";
+    if(trx.type === "Geri Qaytarma") badgeColor = "bg-purple-100 text-purple-700";
 
     tbody.innerHTML += `
       <tr class="border-b hover:bg-slate-50">
@@ -358,21 +399,30 @@ function renderReportsTable() {
   });
 }
 
+// TƏKMİLLƏŞDİRİLMİŞ DASHBOARD HESABLAMALARI (Tarix uyğunlaşdırması ilə)
 function renderDashboardStats() {
-  const todayStr = new Date().toLocaleDateString();
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  
+  // Müxtəlif tarix formatlarını dəstəkləmək üçün yoxlama (məs: "05.10.2026" və ya "10.05.2026")
+  const datePattern1 = `${day}.${month}.${year}`;
+  const datePattern2 = `${month}/${day}/${year}`;
+
   const dateElem = document.getElementById('todayDateStr');
-  if(dateElem) dateElem.innerText = new Date().toLocaleDateString('az-AZ');
+  if(dateElem) dateElem.innerText = `${day}.${month}.${year}`;
 
   let todaySalesTotal = 0;
   let todayExpensesTotal = 0;
   let todaySalesItems = [];
 
   transactionsList.forEach(trx => {
-    if(trx.date && trx.date.includes(todayStr.slice(0, 5))) {
+    if(trx.date && (trx.date.includes(datePattern1) || trx.date.includes(datePattern2) || trx.date.includes(`${day}.${month}`))) {
       if(trx.type === "Satış") {
         todaySalesTotal += Number(trx.total) || 0;
         todaySalesItems.push(trx);
-      } else if(trx.type === "Xərc") {
+      } else if(trx.type === "Xərc" || trx.type === "Geri Qaytarma") {
         todayExpensesTotal += Number(trx.total) || 0;
       }
     }
@@ -408,17 +458,22 @@ function renderDashboardStats() {
 }
 
 function dayEndReport() {
-  const todayStr = new Date().toLocaleDateString();
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  const datePattern = `${day}.${month}.${year}`;
+
   let sales = 0, expenses = 0;
   
   transactionsList.forEach(trx => {
-    if(trx.date && trx.date.includes(todayStr.slice(0, 5))) {
+    if(trx.date && trx.date.includes(datePattern)) {
       if(trx.type === "Satış") sales += Number(trx.total) || 0;
-      if(trx.type === "Xərc") expenses += Number(trx.total) || 0;
+      if(trx.type === "Xərc" || trx.type === "Geri Qaytarma") expenses += Number(trx.total) || 0;
     }
   });
 
-  document.getElementById('dayEndModalDate').innerText = new Date().toLocaleDateString('az-AZ', { year: 'numeric', month: 'long', day: 'numeric' });
+  document.getElementById('dayEndModalDate').innerText = `${day}.${month}.${year}`;
   document.getElementById('deSales').innerText = sales.toFixed(2) + " ₼";
   document.getElementById('deExpenses').innerText = expenses.toFixed(2) + " ₼";
   document.getElementById('deNet').innerText = (sales - expenses).toFixed(2) + " ₼";
@@ -458,8 +513,4 @@ function sendWhatsApp() {
   const invTotal = document.getElementById('invTotal');
   const totalVal = invTotal ? invTotal.innerText : '0.00 ₼';
   window.open(`https://wa.me/?text=DecorConcept%20Qaiməsi%20-%20Yekun:%20${totalVal}`, '_blank');
-}
-
-function downloadExcel() {
-  window.location.href = "DivarPanel_Final_Sablon.xlsx";
 }
