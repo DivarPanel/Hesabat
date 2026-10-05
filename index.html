@@ -6,7 +6,11 @@
   <title>DecorConcept - POS Sistemi</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>.receipt-bg { background: repeating-linear-gradient(45deg, #f8fafc, #f8fafc 10px, #ffffff 10px, #ffffff 20px); border: 1px dashed #cbd5e1; }</style>
+  <style>
+    .receipt-bg { background: repeating-linear-gradient(45deg, #f8fafc, #f8fafc 10px, #ffffff 10px, #ffffff 20px); border: 1px dashed #cbd5e1; }
+    /* Mobil üçün sürüşdürmə optimizasiyası */
+    body { overscroll-behavior-y: none; }
+  </style>
 </head>
 <body class="bg-slate-100 font-sans text-slate-800 antialiased h-screen overflow-hidden flex flex-col select-none">
 
@@ -16,15 +20,12 @@
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
       <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl mx-auto flex items-center justify-center text-2xl font-bold mb-4">DC</div>
       <h1 class="text-xl font-bold text-slate-900">DecorConcept</h1><p class="text-xs text-slate-500 mb-6">Eurohome Filialı</p>
-      <div class="space-y-4">
-        <input type="password" id="pinInput" maxlength="4" placeholder="4 rəqəmli PIN" class="w-full text-center tracking-widest text-2xl font-bold py-3 border-2 rounded-xl focus:border-blue-600 focus:outline-none">
-        <p id="loginError" class="text-xs text-rose-500 mt-2 hidden">Yanlış PIN!</p>
-        <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-xl active:scale-95">Daxil Ol</button>
-      </div>
+      <div class="space-y-4"><input type="password" id="pinInput" maxlength="4" placeholder="4 rəqəmli PIN" class="w-full text-center tracking-widest text-2xl font-bold py-3 border-2 rounded-xl focus:border-blue-600 focus:outline-none"><p id="loginError" class="text-xs text-rose-500 mt-2 hidden">Yanlış PIN!</p><button onclick="login()" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl active:scale-95">Daxil Ol</button></div>
     </div>
   </div>
 
   <div id="appContainer" class="flex h-full w-full overflow-hidden">
+    <!-- SOL MENYU (Masaüstü) -->
     <aside class="w-64 bg-slate-900 text-slate-300 hidden md:flex flex-col justify-between border-r border-slate-800 shrink-0">
       <div>
         <div class="p-5 border-b border-slate-800 flex items-center gap-3"><div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold">DC</div><div><h2 class="text-sm font-bold text-white">DecorConcept</h2></div></div>
@@ -33,23 +34,24 @@
           <button onclick="nav('pos')" data-target="pos" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800"><i class="fa-solid fa-cash-register w-5"></i> Satış (POS)</button>
           <button onclick="nav('stock')" data-target="stock" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800"><i class="fa-solid fa-boxes-stacked w-5"></i> Anbar / Stok</button>
           <button onclick="nav('reports')" data-target="reports" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800"><i class="fa-solid fa-file-invoice-dollar w-5"></i> Əməliyyatlar</button>
+          <button onclick="nav('customers')" data-target="customers" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold hover:bg-slate-800"><i class="fa-solid fa-users w-5"></i> Müştərilər</button>
         </nav>
       </div>
-      <div class="p-4 border-t border-slate-800 flex items-center justify-between">
-        <div class="flex items-center gap-2"><div id="userInitial" class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">B</div><p id="activeUser" class="text-xs font-bold text-white">Bəhram</p></div>
-        <button onclick="logout()" class="text-slate-400 hover:text-rose-400 p-2"><i class="fa-solid fa-power-off"></i></button>
-      </div>
+      <div class="p-4 border-t border-slate-800 flex items-center justify-between"><div class="flex items-center gap-2"><div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">B</div><p id="activeUser" class="text-xs font-bold text-white">Bəhram</p></div><button onclick="logout()" class="text-slate-400 hover:text-rose-400 p-2"><i class="fa-solid fa-power-off"></i></button></div>
     </aside>
 
     <main class="flex-1 flex flex-col h-full overflow-hidden bg-slate-100">
-      <header class="bg-white border-b h-14 flex items-center justify-between px-4 md:hidden shrink-0">
+      <header class="bg-white border-b h-14 flex items-center justify-between px-4 md:hidden shrink-0 shadow-sm">
         <div class="flex items-center gap-2"><div class="w-7 h-7 bg-blue-600 text-white rounded-lg flex justify-center items-center text-xs font-bold">DC</div><span class="font-bold text-sm">DecorConcept</span></div>
         <div class="flex items-center gap-2"><span id="mobileActiveUser" class="text-xs font-bold bg-slate-100 px-2.5 py-1 rounded-lg">Bəhram</span><button onclick="logout()" class="text-rose-500"><i class="fa-solid fa-power-off"></i></button></div>
       </header>
 
-      <div class="flex-1 overflow-y-auto p-3 md:p-6 pb-20 md:pb-6">
+      <!-- ƏSAS KONTENT (Mobil üçün alt boşluq artırıldı ki, menyu mane olmasın) -->
+      <div class="flex-1 overflow-y-auto p-3 md:p-6 pb-28 md:pb-6">
+        
+        <!-- DASHBOARD -->
         <section id="view-dashboard" class="view-section space-y-4">
-          <div class="flex justify-between items-center"><div><h1 class="text-lg font-bold">Ana Səhifə (Bugün)</h1></div><button onclick="dayEndReport()" class="bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl"><i class="fa-solid fa-calculator mr-1"></i> Günün Sonu</button></div>
+          <div class="flex justify-between items-center"><div><h1 class="text-lg font-bold">Ana Səhifə (Bugün)</h1></div><button onclick="dayEndReport()" class="bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm"><i class="fa-solid fa-calculator mr-1"></i> Günün Sonu</button></div>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div class="bg-white p-4 rounded-2xl shadow-sm"><p class="text-xs text-slate-500">Satış</p><h3 id="dashSales" class="text-2xl font-bold text-emerald-600">0.00 ₼</h3></div>
             <div class="bg-white p-4 rounded-2xl shadow-sm"><p class="text-xs text-slate-500">Xərclər</p><h3 id="dashExpenses" class="text-2xl font-bold text-rose-600">0.00 ₼</h3></div>
@@ -61,80 +63,100 @@
           </div>
         </section>
 
-        <section id="view-pos" class="view-section hidden grid grid-cols-1 lg:grid-cols-12 gap-4 h-[calc(100vh-140px)]">
-          <div class="lg:col-span-7 flex flex-col bg-white rounded-2xl shadow-sm h-[400px] lg:h-full">
+        <!-- POS (SATIŞ) - TELEFONDA MÜKƏMMƏL ALT-ÜST BÖLGÜ -->
+        <section id="view-pos" class="view-section hidden flex flex-col lg:grid lg:grid-cols-12 gap-4 h-full">
+          <!-- Məhsul seçimi -->
+          <div class="lg:col-span-7 flex flex-col bg-white rounded-2xl shadow-sm h-[42vh] lg:h-full shrink-0">
             <div class="p-3 border-b"><input type="text" id="productSearch" oninput="filterProducts()" placeholder="Məhsul axtar..." class="w-full px-4 py-2 border rounded-xl text-xs bg-slate-50"></div>
             <div id="posProductGrid" class="flex-1 overflow-y-auto p-3 grid grid-cols-2 gap-2 content-start"></div>
           </div>
-          <div class="lg:col-span-5 flex flex-col bg-white rounded-2xl shadow-sm relative">
-            <div class="p-3 border-b bg-slate-50 flex justify-between items-center">
-              <h3 class="text-xs font-bold">Səbət</h3>
-              <button id="cancelEditBtn" onclick="cancelEdit()" class="hidden text-[10px] bg-rose-100 text-rose-600 px-2 py-1 rounded font-bold">Düzəlişi Ləğv Et</button>
-            </div>
-            <div id="cartItems" class="max-h-52 lg:flex-1 overflow-y-auto p-3 space-y-2"><div id="emptyCart" class="text-center py-8 text-slate-400 text-xs">Səbət boşdur</div></div>
-            <div class="p-3 border-t bg-slate-50 space-y-3">
-              <div class="grid grid-cols-2 gap-2"><input type="text" id="custName" placeholder="Müştəri Adı" class="w-full px-3 py-2 border rounded-xl text-xs"><input type="text" id="custPhone" placeholder="Telefon Nömrəsi" class="w-full px-3 py-2 border rounded-xl text-xs"></div>
-              <div class="grid grid-cols-2 gap-2"><select id="payMethod" class="w-full px-3 py-2 border rounded-xl text-xs"><option value="Nağd">Nağd</option><option value="Kart">Kart</option></select><input type="number" id="saleDiscount" placeholder="Endirim (₼)" oninput="renderCart()" class="w-full px-3 py-2 border rounded-xl text-xs text-rose-600 font-bold"></div>
-              <div class="flex justify-between items-center bg-white border p-2 rounded-xl"><span class="text-xs font-bold text-slate-500">Yekun:</span><span id="cartTotal" class="text-base font-bold text-blue-600">0.00 ₼</span></div>
-              <button id="processSaleBtn" onclick="processSale()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg text-xs transition-colors">Qaimə Yarat & Təsdiqlə</button>
+          <!-- Səbət & Ödəniş -->
+          <div class="lg:col-span-5 flex flex-col bg-white rounded-2xl shadow-sm flex-1">
+            <div class="p-2.5 border-b bg-slate-50 flex justify-between items-center"><h3 class="text-xs font-bold">Səbət</h3><button id="cancelEditBtn" onclick="cancelEdit()" class="hidden text-[10px] bg-rose-100 text-rose-600 px-2 py-1 rounded font-bold">Ləğv Et</button></div>
+            <div id="cartItems" class="max-h-[140px] lg:flex-1 overflow-y-auto p-2.5 space-y-2"><div id="emptyCart" class="text-center py-4 text-slate-400 text-xs">Səbət boşdur</div></div>
+            <div class="p-3 border-t bg-slate-50 space-y-2 shrink-0">
+              <div class="grid grid-cols-2 gap-2"><input type="text" id="custName" placeholder="Müştəri Adı" class="w-full px-3 py-2 border rounded-xl text-xs bg-white"><input type="text" id="custPhone" placeholder="Telefon" class="w-full px-3 py-2 border rounded-xl text-xs bg-white"></div>
+              <div class="grid grid-cols-2 gap-2"><select id="payMethod" class="w-full px-3 py-2 border rounded-xl text-xs bg-white"><option value="Nağd">Nağd</option><option value="Kart">Kart</option></select><input type="number" id="saleDiscount" placeholder="Endirim (₼)" oninput="renderCart()" class="w-full px-3 py-2 border rounded-xl text-xs text-rose-600 font-bold bg-white"></div>
+              <div class="flex justify-between items-center bg-white border px-3 py-1.5 rounded-xl"><span class="text-xs font-bold text-slate-500">Yekun:</span><span id="cartTotal" class="text-base font-bold text-blue-600">0.00 ₼</span></div>
+              <button id="processSaleBtn" onclick="processSale()" class="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl text-xs shadow-md active:scale-95 transition-transform">Qaimə Yarat & Təsdiqlə</button>
             </div>
           </div>
         </section>
 
-        <section id="view-stock" class="view-section hidden space-y-4"><div class="flex justify-between"><h1>Anbar</h1><button onclick="document.getElementById('stockModal').classList.remove('hidden')" class="bg-blue-600 text-white text-xs px-3 py-2 rounded-xl">Mədaxil Et</button></div><div class="bg-white rounded-2xl overflow-hidden"><table class="w-full text-left text-xs"><thead class="bg-slate-50 border-b"><tr><th class="p-3">Ad</th><th class="p-3 text-center">Stok</th><th class="p-3 text-right">Qiymət</th></tr></thead><tbody id="stockTableBody"></tbody></table></div></section>
-        <section id="view-reports" class="view-section hidden space-y-4"><div class="flex justify-between"><h1>Əməliyyatlar</h1><button onclick="document.getElementById('expenseModal').classList.remove('hidden')" class="bg-rose-600 text-white text-xs px-3 py-2 rounded-xl">Xərc Yaz</button></div><div class="bg-white rounded-2xl overflow-hidden"><table class="w-full text-left text-xs"><thead class="bg-slate-50 border-b"><tr><th class="p-3">Tarix</th><th class="p-3">Qaimə/Tip</th><th class="p-3">Təyinat</th><th class="p-3 text-right">Məbləğ</th></tr></thead><tbody id="allTransactionsTableBody"></tbody></table></div></section>
+        <!-- ANBAR -->
+        <section id="view-stock" class="view-section hidden space-y-4"><div class="flex justify-between items-center"><h1>Anbar & Stok</h1><button onclick="openStockModal()" class="bg-blue-600 text-white text-xs px-3 py-2 rounded-xl shadow-sm">Mal Mədaxil Et</button></div><div class="bg-white rounded-2xl overflow-hidden shadow-sm"><table class="w-full text-left text-xs"><thead class="bg-slate-50 border-b"><tr><th class="p-3">Ad</th><th class="p-3 text-center">Stok</th><th class="p-3 text-right">Qiymət</th></tr></thead><tbody id="stockTableBody"></tbody></table></div></section>
+        
+        <!-- ƏMƏLİYYATLAR -->
+        <section id="view-reports" class="view-section hidden space-y-4">
+          <div class="flex justify-between items-center"><h1>Əməliyyatlar</h1><div class="flex gap-2"><button onclick="document.getElementById('returnModal').classList.remove('hidden'); populateReturnProducts();" class="bg-amber-500 text-white text-xs px-3 py-2 rounded-xl shadow-sm"><i class="fa-solid fa-rotate-left mr-1"></i> Qaytarılma</button><button onclick="document.getElementById('expenseModal').classList.remove('hidden')" class="bg-rose-600 text-white text-xs px-3 py-2 rounded-xl shadow-sm"><i class="fa-solid fa-minus mr-1"></i> Xərc</button></div></div>
+          <div class="bg-white rounded-2xl overflow-hidden shadow-sm"><table class="w-full text-left text-xs"><thead class="bg-slate-50 border-b"><tr><th class="p-3">Tarix</th><th class="p-3">Qaimə/Tip</th><th class="p-3">Təyinat</th><th class="p-3 text-right">Məbləğ</th></tr></thead><tbody id="allTransactionsTableBody"></tbody></table></div>
+        </section>
+
+        <!-- MÜŞTƏRİLƏR BAZASI -->
+        <section id="view-customers" class="view-section hidden space-y-4">
+          <div class="flex justify-between items-center"><h1>Müştəri Bazası</h1></div>
+          <div class="bg-white rounded-2xl overflow-hidden shadow-sm">
+            <div class="p-3 border-b"><input type="text" id="custSearch" oninput="renderCustomers()" placeholder="Müştəri axtar..." class="w-full px-4 py-2 border rounded-xl text-xs bg-slate-50"></div>
+            <table class="w-full text-left text-xs"><thead class="bg-slate-50 border-b"><tr><th class="p-3">Müştəri / Nömrə</th><th class="p-3 text-center">Alış Sayı</th><th class="p-3 text-right">Ümumi Dövriyyə</th></tr></thead><tbody id="customersTableBody"></tbody></table>
+          </div>
+        </section>
       </div>
 
-      <nav class="md:hidden bg-white border-t flex justify-around items-center h-14 fixed bottom-0 left-0 right-0 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-        <button onclick="nav('dashboard')" data-target="dashboard" class="nav-btn w-full flex flex-col items-center text-blue-600"><i class="fa-solid fa-chart-pie"></i><span class="text-[10px] mt-0.5">İcmal</span></button>
-        <button onclick="nav('pos')" data-target="pos" class="nav-btn w-full flex flex-col items-center text-slate-500"><i class="fa-solid fa-cash-register"></i><span class="text-[10px] mt-0.5">Satış</span></button>
-        <button onclick="nav('stock')" data-target="stock" class="nav-btn w-full flex flex-col items-center text-slate-500"><i class="fa-solid fa-boxes-stacked"></i><span class="text-[10px] mt-0.5">Anbar</span></button>
-        <button onclick="nav('reports')" data-target="reports" class="nav-btn w-full flex flex-col items-center text-slate-500"><i class="fa-solid fa-file-invoice-dollar"></i><span class="text-[10px] mt-0.5">Hesabat</span></button>
+      <!-- MOBİL ALT MENYU (Həmişə öndə və səliqəli) -->
+      <nav class="md:hidden bg-white border-t flex justify-around items-center h-16 fixed bottom-0 left-0 right-0 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        <button onclick="nav('dashboard')" data-target="dashboard" class="nav-btn w-full flex flex-col items-center justify-center text-blue-600 h-full"><i class="fa-solid fa-chart-pie text-base"></i><span class="text-[10px] mt-0.5 font-semibold">İcmal</span></button>
+        <button onclick="nav('pos')" data-target="pos" class="nav-btn w-full flex flex-col items-center justify-center text-slate-500 h-full"><i class="fa-solid fa-cash-register text-base"></i><span class="text-[10px] mt-0.5 font-semibold">Satış</span></button>
+        <button onclick="nav('stock')" data-target="stock" class="nav-btn w-full flex flex-col items-center justify-center text-slate-500 h-full"><i class="fa-solid fa-boxes-stacked text-base"></i><span class="text-[10px] mt-0.5 font-semibold">Anbar</span></button>
+        <button onclick="nav('reports')" data-target="reports" class="nav-btn w-full flex flex-col items-center justify-center text-slate-500 h-full"><i class="fa-solid fa-file-invoice-dollar text-base"></i><span class="text-[10px] mt-0.5 font-semibold">Hesabat</span></button>
+        <button onclick="nav('customers')" data-target="customers" class="nav-btn w-full flex flex-col items-center justify-center text-slate-500 h-full"><i class="fa-solid fa-users text-base"></i><span class="text-[10px] mt-0.5 font-semibold">Baza</span></button>
       </nav>
     </main>
   </div>
 
-  <div id="addProductModal" class="fixed inset-0 z-50 bg-slate-900/50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4"><h3 class="text-sm font-bold border-b pb-2 text-blue-600" id="addProdName"></h3><div class="grid grid-cols-2 gap-3"><div><label class="text-[10px] text-slate-500 uppercase">Miqdar (Max: <span id="addProdMaxStock"></span>)</label><input type="number" id="addProdQty" value="1" min="1" class="w-full border px-3 py-2 rounded-xl text-xs mt-1"></div><div><label class="text-[10px] text-slate-500 uppercase">Qiymət (₼)</label><input type="number" step="0.01" id="addProdPrice" class="w-full border px-3 py-2 rounded-xl text-xs mt-1"></div></div><div class="flex gap-2 mt-4"><button onclick="confirmAddToCart()" class="flex-1 bg-blue-600 text-white py-2 rounded-xl text-xs font-bold">Səbətə At</button><button onclick="closeModal('addProductModal')" class="flex-1 bg-slate-200 py-2 rounded-xl text-xs">İmtina</button></div></div></div>
+  <!-- MODALLAR (Telefonda ekranı tam örtməsi və rahat scroll olması üçün) -->
+  <div id="addProductModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl"><h3 class="text-sm font-bold border-b pb-2 text-blue-600" id="addProdName"></h3><div class="grid grid-cols-2 gap-3"><div><label class="text-[10px] text-slate-500 uppercase font-bold">Miqdar (Max: <span id="addProdMaxStock"></span>)</label><input type="number" id="addProdQty" value="1" min="1" class="w-full border px-3 py-2 rounded-xl text-xs mt-1 bg-slate-50"></div><div><label class="text-[10px] text-slate-500 uppercase font-bold">Qiymət (₼)</label><input type="number" step="0.01" id="addProdPrice" class="w-full border px-3 py-2 rounded-xl text-xs mt-1 bg-slate-50"></div></div><div class="flex gap-2 pt-2"><button onclick="confirmAddToCart()" class="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-xs font-bold shadow-md">Səbətə At</button><button onclick="closeModal('addProductModal')" class="flex-1 bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-bold">İmtina</button></div></div></div>
 
-  <div id="viewInvoiceModal" class="fixed inset-0 z-[60] bg-slate-900/70 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full overflow-hidden flex flex-col max-h-[90vh]">
-      <div class="bg-blue-600 text-white p-4 text-center"><h2 class="text-lg font-bold tracking-wider">DECOR CONCEPT</h2><p class="text-[10px] opacity-80">Eurohome Filialı • 055 203 22 71</p></div>
+  <div id="viewInvoiceModal" class="fixed inset-0 z-[60] bg-slate-900/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden flex flex-col max-h-[90vh]">
+      <div class="bg-blue-600 text-white p-4 text-center shrink-0"><h2 class="text-lg font-bold tracking-wider">DECOR CONCEPT</h2><p class="text-[10px] opacity-80">Eurohome Filialı • 055 203 22 71</p></div>
       <div class="receipt-bg p-4 flex-1 overflow-y-auto">
-        <div class="text-center mb-4 border-b border-dashed border-slate-300 pb-3">
-          <h3 class="text-sm font-bold text-slate-800">SATIŞ QAİMƏSİ</h3>
-          <p class="text-xs text-blue-600 font-bold" id="viewInvNo"></p>
-          <p class="text-[10px] text-slate-500 mt-1" id="viewInvDate"></p>
-        </div>
-        <div class="text-xs space-y-1 mb-4 text-slate-700">
-          <div class="flex justify-between"><span>Müştəri:</span><strong id="viewInvCust"></strong></div>
-          <div class="flex justify-between"><span>Satıcı:</span><strong id="viewInvUser"></strong></div>
-          <div class="flex justify-between"><span>Ödəniş Tipi:</span><strong id="viewInvPay"></strong></div>
-        </div>
-        <table class="w-full text-xs text-left border-t border-b border-dashed border-slate-300 py-2 my-2">
-          <thead><tr class="text-[10px] text-slate-400"><th class="pb-1">Məhsul</th><th class="text-center pb-1">Say</th><th class="text-right pb-1">Məbləğ</th></tr></thead>
-          <tbody id="viewInvItems" class="text-slate-800 font-medium"></tbody>
-        </table>
-        <div class="text-xs space-y-1 pt-2">
-          <div class="flex justify-between text-slate-500"><span>Ara Cəm:</span><span id="viewInvSubTotal"></span></div>
-          <div class="flex justify-between text-rose-500"><span>Endirim:</span><span id="viewInvDiscount"></span></div>
-          <div class="flex justify-between text-base font-bold text-slate-900 mt-2 border-t border-slate-300 pt-2"><span>YEKUN:</span><span id="viewInvTotal"></span></div>
-        </div>
+        <div class="text-center mb-4 border-b border-dashed border-slate-300 pb-3"><h3 class="text-sm font-bold text-slate-800">SATIŞ QAİMƏSİ</h3><p class="text-xs text-blue-600 font-bold" id="viewInvNo"></p><p class="text-[10px] text-slate-500 mt-1" id="viewInvDate"></p></div>
+        <div class="text-xs space-y-1 mb-4 text-slate-700"><div class="flex justify-between"><span>Müştəri:</span><strong id="viewInvCust"></strong></div><div class="flex justify-between"><span>Satıcı:</span><strong id="viewInvUser"></strong></div><div class="flex justify-between"><span>Ödəniş Tipi:</span><strong id="viewInvPay"></strong></div></div>
+        <table class="w-full text-xs text-left border-t border-b border-dashed border-slate-300 py-2 my-2"><thead><tr class="text-[10px] text-slate-400"><th class="pb-1">Məhsul</th><th class="text-center pb-1">Say</th><th class="text-right pb-1">Məbləğ</th></tr></thead><tbody id="viewInvItems" class="text-slate-800 font-medium"></tbody></table>
+        <div class="text-xs space-y-1 pt-2"><div class="flex justify-between text-slate-500"><span>Ara Cəm:</span><span id="viewInvSubTotal"></span></div><div class="flex justify-between text-rose-500"><span>Endirim:</span><span id="viewInvDiscount"></span></div><div class="flex justify-between text-base font-bold text-slate-900 mt-2 border-t border-slate-300 pt-2"><span>YEKUN:</span><span id="viewInvTotal"></span></div></div>
       </div>
       <div class="p-3 bg-slate-50 border-t flex flex-col gap-2 shrink-0">
-        <button onclick="sendInvoiceWhatsApp()" class="w-full bg-emerald-500 text-white font-bold py-2.5 rounded-lg text-xs flex items-center justify-center gap-2"><i class="fa-brands fa-whatsapp text-base"></i> WhatsApp</button>
-        <!-- ADMİN DÜYMƏLƏRİ: DÜZƏLİŞ ET VƏ SİL -->
-        <div id="adminActionBtns" class="hidden grid grid-cols-2 gap-2">
-           <button onclick="editInvoice()" class="w-full bg-blue-100 text-blue-700 font-bold py-2 rounded-lg text-xs hover:bg-blue-200 border border-blue-200"><i class="fa-solid fa-pen mr-1"></i> Düzəliş Et</button>
-           <button onclick="deleteCurrentInvoice()" class="w-full bg-rose-100 text-rose-600 font-bold py-2 rounded-lg text-xs hover:bg-rose-200 border border-rose-200"><i class="fa-solid fa-trash-can mr-1"></i> Ləğv Et</button>
-        </div>
-        <button onclick="closeInvoiceModal()" class="w-full bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg text-xs">Bağla</button>
+        <button onclick="sendInvoiceWhatsApp()" class="w-full bg-emerald-500 text-white font-bold py-2.5 rounded-lg text-xs flex items-center justify-center gap-2 shadow-sm"><i class="fa-brands fa-whatsapp text-base"></i> WhatsApp</button>
+        <div id="adminActionBtns" class="hidden grid grid-cols-2 gap-2"><button onclick="editInvoice()" class="w-full bg-blue-100 text-blue-700 font-bold py-2 rounded-lg text-xs border border-blue-200">Düzəliş Et</button><button onclick="deleteCurrentInvoice()" class="w-full bg-rose-100 text-rose-600 font-bold py-2 rounded-lg text-xs border border-rose-200">Ləğv Et</button></div>
+        <button onclick="closeInvoiceModal()" class="w-full bg-slate-200 text-slate-700 font-bold py-2.5 rounded-lg text-xs">Bağla & Davam Et</button>
       </div>
     </div>
   </div>
 
-  <div id="stockModal" class="fixed inset-0 z-50 bg-slate-900/50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl w-full max-w-sm p-5 space-y-3"><h3 class="text-sm font-bold">Mal Mədaxil Et</h3><input type="text" id="stockProdName" placeholder="Məhsul adı" class="w-full border px-3 py-2 rounded text-xs"><input type="number" id="stockQty" placeholder="Miqdar" class="w-full border px-3 py-2 rounded text-xs"><button onclick="processStockIn()" class="w-full bg-blue-600 text-white py-2 rounded text-xs">Təsdiqlə</button><button onclick="closeModal('stockModal')" class="w-full text-slate-500 text-xs">Bağla</button></div></div>
-  <div id="expenseModal" class="fixed inset-0 z-50 bg-slate-900/50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl w-full max-w-sm p-5 space-y-3"><h3 class="text-sm font-bold">Xərc Yaz</h3><input type="text" id="expDesc" placeholder="Xərc adı" class="w-full border px-3 py-2 rounded text-xs"><input type="number" id="expAmount" placeholder="Məbləğ (₼)" class="w-full border px-3 py-2 rounded text-xs"><button onclick="processExpense()" class="w-full bg-rose-600 text-white py-2 rounded text-xs">Əlavə Et</button><button onclick="closeModal('expenseModal')" class="w-full text-slate-500 text-xs">Bağla</button></div></div>
-  <div id="dayEndModal" class="fixed inset-0 z-50 bg-slate-900/50 hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl max-w-sm w-full p-5 text-center"><h3 class="font-bold">Günün Sonu</h3><div class="mt-4"><div class="flex justify-between text-xs"><span>Satış:</span><span id="deSales" class="font-bold text-emerald-600">0.00 ₼</span></div><div class="flex justify-between text-xs mt-2"><span>Xərc:</span><span id="deExpenses" class="font-bold text-rose-600">0.00 ₼</span></div><hr class="my-2"><div class="flex justify-between text-sm font-bold"><span>Net:</span><span id="deNet" class="text-blue-600">0.00 ₼</span></div></div><button onclick="closeModal('dayEndModal')" class="w-full bg-slate-800 text-white py-2 rounded mt-4 text-xs">Bağla</button></div></div>
+  <div id="stockModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-sm p-5 space-y-3 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <h3 class="text-sm font-bold border-b pb-2">Mal Mədaxil Et</h3>
+      <select id="stockType" onchange="toggleStockType()" class="w-full border px-3 py-2 rounded-xl text-xs bg-slate-50 font-bold"><option value="existing">Bazada Olan Məhsul</option><option value="new">Tamamilə Yeni Məhsul</option></select>
+      <div id="stockExistingDiv"><select id="stockExistingSelect" class="w-full border px-3 py-2 rounded-xl text-xs bg-slate-50"></select></div>
+      <div id="stockNewDiv" class="hidden space-y-3"><input type="text" id="stockNewName" placeholder="Yeni Məhsul Adı" class="w-full border px-3 py-2 rounded-xl text-xs"><input type="number" id="stockNewPrice" placeholder="Satış Qiyməti (₼)" class="w-full border px-3 py-2 rounded-xl text-xs"></div>
+      <div class="grid grid-cols-2 gap-2"><input type="number" id="stockQty" placeholder="Miqdar (Say)" class="w-full border px-3 py-2 rounded-xl text-xs"><input type="text" id="stockSupplier" placeholder="Anbar / Təchizatçı" class="w-full border px-3 py-2 rounded-xl text-xs"></div>
+      <div class="flex gap-2 pt-2"><button onclick="processStockIn()" class="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-xs font-bold shadow-md">Təsdiqlə</button><button onclick="closeModal('stockModal')" class="flex-1 bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-bold">İmtina</button></div>
+    </div>
+  </div>
+
+  <div id="returnModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl w-full max-w-sm p-5 space-y-3 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <h3 class="text-sm font-bold text-amber-600 border-b pb-2">Müştəridən Geri Qaytarılma</h3>
+      <select id="returnProduct" class="w-full border px-3 py-2 rounded-xl text-xs bg-slate-50"></select>
+      <div class="grid grid-cols-2 gap-2"><input type="number" id="returnQty" placeholder="Qaytarılan Say" class="w-full border px-3 py-2 rounded-xl text-xs"><input type="number" id="returnAmount" placeholder="Geri Verilən Məbləğ (₼)" class="w-full border px-3 py-2 rounded-xl text-xs"></div>
+      <input type="text" id="returnCustomer" placeholder="Müştəri Adı" class="w-full border px-3 py-2 rounded-xl text-xs">
+      <select id="returnPayMethod" class="w-full border px-3 py-2 rounded-xl text-xs bg-slate-50"><option value="Nağd">Kassadan Nağd Çıxış</option><option value="Kart">Kartla Geri Qaytarma</option></select>
+      <div class="flex gap-2 pt-2"><button onclick="processReturn()" class="flex-1 bg-amber-500 text-white py-2.5 rounded-xl text-xs font-bold shadow-md">Qaytarmanı Təsdiqlə</button><button onclick="closeModal('returnModal')" class="flex-1 bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-bold">İmtina</button></div>
+    </div>
+  </div>
+
+  <div id="expenseModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl w-full max-w-sm p-5 space-y-3 shadow-2xl"><h3 class="text-sm font-bold border-b pb-2">Xərc Yaz</h3><input type="text" id="expDesc" placeholder="Xərc adı" class="w-full border px-3 py-2 rounded-xl text-xs"><input type="number" id="expAmount" placeholder="Məbləğ (₼)" class="w-full border px-3 py-2 rounded-xl text-xs"><div class="flex gap-2 pt-2"><button onclick="processExpense()" class="flex-1 bg-rose-600 text-white py-2.5 rounded-xl text-xs font-bold shadow-md">Əlavə Et</button><button onclick="closeModal('expenseModal')" class="flex-1 bg-slate-200 text-slate-700 py-2.5 rounded-xl text-xs font-bold">İmtina</button></div></div></div>
+  <div id="dayEndModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4"><div class="bg-white rounded-2xl max-w-sm w-full p-5 text-center shadow-2xl"><h3 class="text-base font-bold">Günün Sonu</h3><div class="my-4"><div class="flex justify-between text-xs py-1"><span>Satış:</span><span id="deSales" class="font-bold text-emerald-600">0.00 ₼</span></div><div class="flex justify-between text-xs py-1"><span>Xərc / Qaytarma:</span><span id="deExpenses" class="font-bold text-rose-600">0.00 ₼</span></div><hr class="my-2"><div class="flex justify-between text-sm font-bold py-1"><span>Net Kassa:</span><span id="deNet" class="text-blue-600">0.00 ₼</span></div></div><button onclick="closeModal('dayEndModal')" class="w-full bg-slate-800 text-white py-2.5 rounded-xl text-xs font-bold">Bağla</button></div></div>
 
   <script src="app.js"></script>
 </body>
