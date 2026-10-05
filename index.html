@@ -101,58 +101,62 @@
         </div>
       </header>
 
-      <!-- Görünüş Bölmələri (Dinamik Səhifələr) -->
+      <!-- Görünüş Bölmələri -->
       <div class="flex-1 overflow-y-auto p-3 sm:p-4 md:p-6 pb-28 md:pb-6">
 
-        <!-- 1. DASHBOARD -->
+        <!-- 1. DASHBOARD & TARİX FİLTRİ -->
         <section id="view-dashboard" class="view-section space-y-4 sm:space-y-6">
-          <div class="flex justify-between items-center">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
             <div>
-              <h1 class="text-base sm:text-lg font-bold text-slate-900">Günün İcmalı</h1>
-              <p class="text-[11px] text-slate-500">Maliyyə göstəriciləri</p>
+              <h1 class="text-base sm:text-lg font-bold text-slate-900">Günün İcmalı & Dövriyyə</h1>
+              <p class="text-[11px] text-slate-500">İstədiyiniz tarixi seçərək hesabatı izləyin</p>
             </div>
-            <button onclick="dayEndReport()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm transition-all active:scale-95">
-              <i class="fa-solid fa-calculator mr-1"></i> Günün Sonu
-            </button>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+              <!-- Tarix Filtri -->
+              <input type="date" id="dashDateFilter" onchange="renderDashboardStats()" class="border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold bg-slate-50 focus:outline-none focus:border-blue-500">
+              <button onclick="dayEndReport()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-xl shadow-sm transition-all active:scale-95 shrink-0">
+                <i class="fa-solid fa-calculator mr-1"></i> Günün Sonu
+              </button>
+            </div>
           </div>
 
           <!-- Statistika Kartları -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-              <p class="text-xs text-slate-500 font-medium mb-1">Bugünkü Satış</p>
+              <p class="text-xs text-slate-500 font-medium mb-1">Seçilən Tarix Satış</p>
               <h3 id="dashSales" class="text-xl sm:text-2xl font-bold text-emerald-600">0.00 ₼</h3>
               <p class="text-[10px] text-slate-400 mt-1" id="todayDateStr">-</p>
             </div>
             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-              <p class="text-xs text-slate-500 font-medium mb-1">Bugünkü Xərclər</p>
+              <p class="text-xs text-slate-500 font-medium mb-1">Seçilən Tarix Xərclər & İadə</p>
               <h3 id="dashExpenses" class="text-xl sm:text-2xl font-bold text-rose-600">0.00 ₼</h3>
-              <p class="text-[10px] text-slate-400 mt-1">Kassa çıxışları</p>
+              <p class="text-[10px] text-slate-400 mt-1">Kassa çıxışları & Geri qaytarma</p>
             </div>
             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
               <p class="text-xs text-slate-500 font-medium mb-1">Net Kassa Balansı</p>
               <h3 id="dashBalance" class="text-xl sm:text-2xl font-bold text-blue-600">0.00 ₼</h3>
-              <p class="text-[10px] text-slate-400 mt-1">Dövriyyə qalığı</p>
+              <p class="text-[10px] text-slate-400 mt-1">Real pul dövriyyəsi</p>
             </div>
           </div>
 
-          <!-- Bugünkü Satılan Məhsullar Cədvəli -->
+          <!-- Seçilən Tarixdə Satılan Məhsullar Cədvəli -->
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="p-3.5 border-b border-slate-100 flex justify-between items-center">
-              <h3 class="text-xs font-bold text-slate-900">Bugünkü Satışlar</h3>
+              <h3 class="text-xs font-bold text-slate-900">Satılan Məhsullar (Seçilən Gün üzrə)</h3>
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
                 <thead class="bg-slate-50 text-slate-500 border-b border-slate-100">
                   <tr>
-                    <th class="p-2.5">Saat</th>
-                    <th class="p-2.5">Məhsul</th>
-                    <th class="p-2.5 text-center">Miqdar</th>
+                    <th class="p-2.5">Saat / Tarix</th>
+                    <th class="p-2.5">Məhsul Adı</th>
+                    <th class="p-2.5 text-center">Miqdar (Ədəd)</th>
                     <th class="p-2.5 text-right">Qiymət</th>
                     <th class="p-2.5 text-right">Yekun</th>
                   </tr>
                 </thead>
                 <tbody id="todaySalesTableBody">
-                  <tr><td colspan="5" class="p-4 text-center text-slate-400">Bugünkü satış qeydə alınmayıb.</td></tr>
+                  <tr><td colspan="5" class="p-4 text-center text-slate-400">Satış qeydə alınmayıb.</td></tr>
                 </tbody>
               </table>
             </div>
@@ -161,7 +165,6 @@
 
         <!-- 2. POS / SATIŞ -->
         <section id="view-pos" class="view-section hidden grid grid-cols-1 lg:grid-cols-12 gap-4 lg:gap-6">
-          <!-- Məhsul Siyahısı / Grid -->
           <div class="lg:col-span-7 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-[450px] lg:h-[calc(100vh-140px)]">
             <div class="p-3 border-b border-slate-100 shrink-0">
               <div class="relative">
@@ -169,24 +172,17 @@
                 <input type="text" id="productSearch" oninput="filterProducts()" placeholder="Məhsul adı ilə axtar..." class="w-full pl-9 pr-4 py-2 border rounded-xl text-xs focus:outline-none focus:border-blue-500 bg-slate-50">
               </div>
             </div>
-            <div id="posProductGrid" class="flex-1 overflow-y-auto p-3 grid grid-cols-2 sm:grid-cols-3 gap-2.5 content-start">
-              <!-- JS vasitəsilə dolur -->
-            </div>
+            <div id="posProductGrid" class="flex-1 overflow-y-auto p-3 grid grid-cols-2 sm:grid-cols-3 gap-2.5 content-start"></div>
           </div>
 
-          <!-- Səbət & Ödəniş Paneli -->
           <div class="lg:col-span-5 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="p-3 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
               <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Satış Səbəti</h3>
               <span class="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full cart-user-name">Bəhram</span>
             </div>
-
-            <!-- Səbət Məhsulları -->
             <div id="cartItems" class="max-h-60 lg:flex-1 overflow-y-auto p-3 space-y-2 min-h-[120px]">
               <div id="emptyCart" class="text-center py-8 text-slate-400 text-xs">Səbət boşdur</div>
             </div>
-
-            <!-- Ödəniş Forması -->
             <div class="p-3.5 border-t border-slate-100 bg-slate-50 space-y-3 shrink-0">
               <div class="grid grid-cols-2 gap-2">
                 <div>
@@ -230,7 +226,6 @@
               <i class="fa-solid fa-plus mr-1"></i> Mal Mədaxil Et
             </button>
           </div>
-
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
@@ -241,15 +236,13 @@
                     <th class="p-3 text-right">Satış Qiyməti</th>
                   </tr>
                 </thead>
-                <tbody id="stockTableBody">
-                  <!-- JS ilə dolur -->
-                </tbody>
+                <tbody id="stockTableBody"></tbody>
               </table>
             </div>
           </div>
         </section>
 
-        <!-- 4. ƏMƏLİYYATLAR / HESABATLAR -->
+        <!-- 4. ƏMƏLİYYATLAR -->
         <section id="view-reports" class="view-section hidden space-y-4 sm:space-y-6">
           <div class="flex justify-between items-center">
             <div>
@@ -265,7 +258,6 @@
               </button>
             </div>
           </div>
-
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-left text-xs">
@@ -315,8 +307,6 @@
   </div>
 
   <!-- MODALLAR -->
-
-  <!-- Qaimə / Invoice Modal -->
   <div id="invoiceModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-5 space-y-4">
       <div class="text-center">
@@ -342,14 +332,11 @@
         <button onclick="sendWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2">
           <i class="fa-brands fa-whatsapp text-sm"></i> WhatsApp
         </button>
-        <button onclick="closeModal('invoiceModal')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl text-xs">
-          Bağla
-        </button>
+        <button onclick="closeModal('invoiceModal')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl text-xs">Bağla</button>
       </div>
     </div>
   </div>
 
-  <!-- Stok (Prixod) Modal -->
   <div id="stockModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4">
       <h3 class="text-sm font-bold text-slate-900">Yeni Mal Mədaxil Et</h3>
@@ -374,7 +361,6 @@
     </div>
   </div>
 
-  <!-- Xərc Modal -->
   <div id="expenseModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4">
       <h3 class="text-sm font-bold text-slate-900">Kassa Xərci Əlavə Et</h3>
@@ -402,7 +388,6 @@
     </div>
   </div>
 
-  <!-- Günün Sonu Modal -->
   <div id="dayEndModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4 text-center">
       <div>
@@ -420,7 +405,6 @@
     </div>
   </div>
 
-  <!-- Geri Qaytarma Modal (Stokdakı məhsulların select seçimi ilə) -->
   <div id="refundModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 space-y-4">
       <h3 class="text-sm font-bold text-slate-900">Məhsul Geri Qaytarma</h3>
@@ -452,38 +436,64 @@
   </div>
 
   <!-- Qaimə Detalları və Redaktə Modalı -->
-  <div id="invoiceDetailModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-5 space-y-4">
-      <div class="flex justify-between items-center border-b pb-3">
-        <div>
-          <h3 id="detailInvNo" class="text-sm font-bold text-slate-900">INV-000000</h3>
-          <p id="detailDate" class="text-[10px] text-slate-500">-</p>
+  <div id="invoiceDetailModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-100">
+      <div class="bg-slate-900 text-white p-6 flex justify-between items-start">
+        <div class="flex items-center gap-3">
+          <div class="w-11 h-11 bg-blue-600 rounded-2xl flex items-center justify-center font-bold text-lg shadow-md shadow-blue-500/30">DC</div>
+          <div>
+            <h2 class="text-sm font-bold tracking-wide">DecorConcept / DivarPanel</h2>
+            <p class="text-[10px] text-slate-400">Eurohome Filialı - Satış Qaiməsi</p>
+          </div>
         </div>
-        <button onclick="closeModal('invoiceDetailModal')" class="text-slate-400 hover:text-slate-600 text-sm font-bold">✕</button>
+        <button onclick="closeModal('invoiceDetailModal')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-300 hover:text-white flex items-center justify-center text-sm transition-colors">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
       </div>
-      <div class="bg-slate-50 p-3 rounded-xl space-y-1.5 text-xs border">
-        <div class="flex justify-between"><span class="text-slate-500">Müştəri:</span> <span id="detailCust" class="font-bold">-</span></div>
-        <div class="flex justify-between"><span class="text-slate-500">Satıcı:</span> <span id="detailUser" class="font-bold">-</span></div>
-      </div>
-      <div class="max-h-48 overflow-y-auto border-t border-b py-2">
-        <table class="w-full text-left text-xs">
-          <thead class="text-slate-400 text-[10px]">
-            <tr>
-              <th>Məhsul</th>
-              <th class="text-center">Miqdar</th>
-              <th class="text-right">Qiymət</th>
-              <th class="text-right">Yekun</th>
-            </tr>
-          </thead>
-          <tbody id="detailItemsTable"></tbody>
-        </table>
-      </div>
-      <div class="flex justify-between items-center font-bold text-sm text-slate-900 pt-1">
-        <span>Yekun Məbləğ:</span> <span id="detailTotal" class="text-blue-600 text-base">0.00 ₼</span>
-      </div>
-      <div class="flex gap-2 pt-2">
-        <button onclick="saveInvoiceChanges()" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-xs">Yadda Saxla</button>
-        <button onclick="closeModal('invoiceDetailModal')" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2.5 rounded-xl text-xs">Bağla</button>
+      <div class="p-6 space-y-5">
+        <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs">
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase font-semibold">Qaimə Nömrəsi</span>
+            <span id="detailInvNo" class="font-bold text-slate-900 text-sm">INV-000000</span>
+          </div>
+          <div class="text-right">
+            <span class="text-slate-400 block text-[10px] uppercase font-semibold">Tarix & Saat</span>
+            <span id="detailDate" class="font-medium text-slate-700">-</span>
+          </div>
+          <div>
+            <span class="text-slate-400 block text-[10px] uppercase font-semibold">Müştəri</span>
+            <span id="detailCust" class="font-bold text-blue-600 text-sm">-</span>
+          </div>
+          <div class="text-right">
+            <span class="text-slate-400 block text-[10px] uppercase font-semibold">Satıcı Məsul</span>
+            <span id="detailUser" class="font-medium text-slate-700">-</span>
+          </div>
+        </div>
+        <div class="max-h-52 overflow-y-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="text-slate-400 text-[10px] uppercase border-b border-slate-100 sticky top-0 bg-white">
+              <tr>
+                <th class="pb-2 font-semibold">Məhsul Adı</th>
+                <th class="pb-2 text-center font-semibold">Miqdar</th>
+                <th class="pb-2 text-right font-semibold">Qiymət (₼)</th>
+                <th class="pb-2 text-right font-semibold">Cəmi</th>
+              </tr>
+            </thead>
+            <tbody id="detailItemsTable"></tbody>
+          </table>
+        </div>
+        <div class="flex justify-between items-center bg-blue-50/50 border border-blue-100 px-4 py-3 rounded-2xl">
+          <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Yekun Ödəniləcək:</span>
+          <span id="detailTotal" class="text-xl font-extrabold text-blue-600">0.00 ₼</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <button onclick="saveInvoiceChanges()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-xl text-xs shadow-lg shadow-emerald-600/20 transition-all active:scale-95 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-check"></i> Yadda Saxla
+          </button>
+          <button onclick="sendWhatsApp()" class="bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 rounded-xl text-xs transition-all active:scale-95 flex items-center justify-center gap-2">
+            <i class="fa-brands fa-whatsapp text-sm text-emerald-400"></i> WhatsApp
+          </button>
+        </div>
       </div>
     </div>
   </div>
