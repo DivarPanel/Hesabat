@@ -34,7 +34,7 @@ async function loadDataFromSheets() {
       renderProducts();
       renderStockTable();
       renderReportsTable();
-      renderDashboardStats();
+      initDashboardDateFilter();
       populateRefundSelect();
       showToast("Baza ilə uğurla sinxronlaşdırıldı!", "emerald");
     } else {
@@ -340,7 +340,6 @@ async function processExpense() {
   renderReportsTable(); renderDashboardStats();
 }
 
-// GERİ QAYTARMA
 async function processRefund() {
   const prodName = document.getElementById('refProdName').value;
   const qty = parseInt(document.getElementById('refQty').value);
@@ -355,7 +354,7 @@ async function processRefund() {
   const refDate = new Date().toLocaleString('az-AZ');
   let p = productsList.find(x => x.name.toLowerCase() === prodName.toLowerCase());
   if (p) {
-    p.stock += qty; // Anbar stoku artır
+    p.stock += qty;
   }
 
   transactionsList.push({
@@ -380,16 +379,20 @@ async function processRefund() {
   alert("Geri qaytarma qeydə alındı və anbar stoku yeniləndi!");
 }
 
-// QAİMƏ DETALLARI VƏ REDAKTƏSİ
 function viewInvoiceDetails(invoiceNo) {
   const trx = transactionsList.find(t => t.invoice === invoiceNo);
   if (!trx) return;
   currentEditingInvoice = trx;
 
   document.getElementById('detailInvNo').innerText = trx.invoice;
-  document.getElementById('detailCust').innerText = trx.target;
-  document.getElementById('detailUser').innerText = trx.user;
-  document.getElementById('detailDate').innerText = trx.date;
+  document.getElementById('detailCust').innerText = trx.target || 'Nağd Müştəri';
+  document.getElementById('detailUser').innerText = trx.user || 'Bəhram';
+  
+  let cleanDate = trx.date;
+  if(cleanDate && cleanDate.includes('GMT')) {
+    cleanDate = cleanDate.split('GMT')[0].trim();
+  }
+  document.getElementById('detailDate').innerText = cleanDate;
   document.getElementById('detailTotal').innerText = Number(trx.total).toFixed(2) + " ₼";
 
   renderDetailItems();
@@ -404,20 +407,20 @@ function renderDetailItems() {
   if (currentEditingInvoice && currentEditingInvoice.items && currentEditingInvoice.items.length > 0) {
     currentEditingInvoice.items.forEach((item, idx) => {
       tbody.innerHTML += `
-        <tr class="border-b">
-          <td class="py-1.5">${item.name}</td>
-          <td class="text-center">
-            <input type="number" min="1" value="${item.qty}" onchange="updateInvoiceItemQty(${idx}, this.value)" class="w-14 text-center border rounded text-xs py-0.5">
+        <tr class="border-b border-slate-100">
+          <td class="py-2 font-medium text-slate-800">${item.name}</td>
+          <td class="text-center py-2">
+            <input type="number" min="1" value="${item.qty}" onchange="updateInvoiceItemQty(${idx}, this.value)" class="w-12 text-center border border-slate-200 rounded-lg text-xs py-1 bg-slate-50 focus:bg-white focus:border-blue-500">
           </td>
-          <td class="text-right">
-            <input type="number" step="0.01" value="${item.price}" onchange="updateInvoiceItemPrice(${idx}, this.value)" class="w-20 text-right border rounded text-xs py-0.5">
+          <td class="text-right py-2">
+            <input type="number" step="0.01" value="${item.price}" onchange="updateInvoiceItemPrice(${idx}, this.value)" class="w-20 text-right border border-slate-200 rounded-lg text-xs py-1 px-1 bg-slate-50 focus:bg-white focus:border-blue-500">
           </td>
-          <td class="text-right font-bold">${(item.qty * item.price).toFixed(2)} ₼</td>
+          <td class="text-right py-2 font-bold text-slate-900">${(item.qty * item.price).toFixed(2)} ₼</td>
         </tr>
       `;
     });
   } else {
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-2 text-slate-400">${currentEditingInvoice.product}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-3 text-slate-400">${currentEditingInvoice.product}</td></tr>`;
   }
 }
 
@@ -486,31 +489,56 @@ function renderReportsTable() {
   });
 }
 
-// DASHBOARD HESABLAMALARI
-function renderDashboardStats() {
-  const now = new Date();
-  const day = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const year = now.getFullYear();
-  
-  const dateElem = document.getElementById('todayDateStr');
-  if(dateElem) dateElem.innerText = `${day}.${month}.${year}`;
+// DASHBOARD TARİX FİLTRLƏMƏ VƏ HESABLAMALARI
+function initDashboardDateFilter() {
+  const dateInput = document.getElementById('dashDateFilter');
+  if (!dateInput) return;
+  if (!dateInput.value) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.value = today;
+  }
+  renderDashboardStats();
+}
 
-  let todaySalesTotal = 0;
-  let todayExpensesTotal = 0;
-  let todaySalesItems = [];
+function renderDashboardStats() {
+  const dateInput = document.getElementById('dashDateFilter');
+  let selectedDateStr = "";
+  
+  if (dateInput && dateInput.value) {
+    const parts = dateInput.value.split('-'); // YYYY-MM-DD
+    if (parts.length === 3) {
+      selectedDateStr = `${parts[2]}.${parts[1]}.${parts[0]}`; // DD.MM.YYYY
+    }
+  }
+  
+  if (!selectedDateStr) {
+    const now = new Date();
+    const d = String(now.getDate()).padStart(2, '0');
+    const m = String(now.getMonth() + 1).padStart(2, '0');
+    const y = now.getFullYear();
+    selectedDateStr = `${d}.${m}.${y}`;
+  }
+
+  const dateElem = document.getElementById('todayDateStr');
+  if(dateElem) dateElem.innerText = selectedDateStr;
+
+  let salesTotal = 0;
+  let expensesTotal = 0;
+  let salesItemsList = [];
 
   transactionsList.forEach(trx => {
-    if(trx.date && (trx.date.includes(`${day}.${month}`) || trx.date.includes(`${day}/${month}`))) {
-      if(trx.type === "Satış") {
-        todaySalesTotal += Number(trx.total) || 0;
-        if(trx.items && Array.isArray(trx.items)) {
-          trx.items.forEach(i => todaySalesItems.push({ date: trx.date, product: i.name, qty: i.qty, price: i.price, total: i.qty * i.price }));
+    if (trx.date && trx.date.includes(selectedDateStr)) {
+      if (trx.type === "Satış") {
+        salesTotal += Number(trx.total) || 0;
+        if (trx.items && Array.isArray(trx.items)) {
+          trx.items.forEach(i => {
+            salesItemsList.push({ time: trx.date, product: i.name, qty: i.qty, price: i.price, total: i.qty * i.price });
+          });
         } else {
-          todaySalesItems.push(trx);
+          salesItemsList.push({ time: trx.date, product: trx.product, qty: trx.qty, price: trx.price || 0, total: trx.total });
         }
-      } else if(trx.type === "Xərc" || trx.type === "Geri Qaytarma") {
-        todayExpensesTotal += Number(trx.total) || 0;
+      } else if (trx.type === "Xərc" || trx.type === "Geri Qaytarma") {
+        expensesTotal += Number(trx.total) || 0;
       }
     }
   });
@@ -519,20 +547,20 @@ function renderDashboardStats() {
   const dashExpenses = document.getElementById('dashExpenses');
   const dashBalance = document.getElementById('dashBalance');
 
-  if(dashSales) dashSales.innerText = todaySalesTotal.toFixed(2) + " ₼";
-  if(dashExpenses) dashExpenses.innerText = todayExpensesTotal.toFixed(2) + " ₼";
-  if(dashBalance) dashBalance.innerText = (todaySalesTotal - todayExpensesTotal).toFixed(2) + " ₼";
+  if(dashSales) dashSales.innerText = salesTotal.toFixed(2) + " ₼";
+  if(dashExpenses) dashExpenses.innerText = expensesTotal.toFixed(2) + " ₼";
+  if(dashBalance) dashBalance.innerText = (salesTotal - expensesTotal).toFixed(2) + " ₼";
 
   const todayTableBody = document.getElementById('todaySalesTableBody');
   if(todayTableBody) {
-    if(todaySalesItems.length === 0) {
-      todayTableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Bugünkü satış qeydə alınmayıb.</td></tr>`;
+    if(salesItemsList.length === 0) {
+      todayTableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">Seçilmiş tarixdə satış qeydə alınmayıb.</td></tr>`;
     } else {
       todayTableBody.innerHTML = '';
-      [...todaySalesItems].reverse().forEach(item => {
+      [...salesItemsList].reverse().forEach(item => {
         todayTableBody.innerHTML += `
           <tr class="border-b">
-            <td class="p-2.5 text-slate-500">${item.date}</td>
+            <td class="p-2.5 text-slate-500">${item.time}</td>
             <td class="p-2.5 font-medium">${item.product}</td>
             <td class="p-2.5 text-center">${item.qty}</td>
             <td class="p-2.5 text-right">${Number(item.price || 0).toFixed(2)} ₼</td>
@@ -545,22 +573,28 @@ function renderDashboardStats() {
 }
 
 function dayEndReport() {
-  const now = new Date();
-  const day = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const year = now.getFullYear();
-  const datePattern = `${day}.${month}`;
+  const dateInput = document.getElementById('dashDateFilter');
+  let selectedDateStr = dateInput ? dateInput.value : "";
+  let formattedDate = "";
+  
+  if (selectedDateStr) {
+    const parts = selectedDateStr.split('-');
+    formattedDate = `${parts[2]}.${parts[1]}.${parts[0]}`;
+  } else {
+    const now = new Date();
+    formattedDate = `${String(now.getDate()).padStart(2, '0')}.${String(now.getMonth() + 1).padStart(2, '0')}.${now.getFullYear()}`;
+  }
 
   let sales = 0, expenses = 0;
   
   transactionsList.forEach(trx => {
-    if(trx.date && trx.date.includes(datePattern)) {
+    if(trx.date && trx.date.includes(formattedDate)) {
       if(trx.type === "Satış") sales += Number(trx.total) || 0;
       if(trx.type === "Xərc" || trx.type === "Geri Qaytarma") expenses += Number(trx.total) || 0;
     }
   });
 
-  document.getElementById('dayEndModalDate').innerText = `${day}.${month}.${year}`;
+  document.getElementById('dayEndModalDate').innerText = formattedDate;
   document.getElementById('deSales').innerText = sales.toFixed(2) + " ₼";
   document.getElementById('deExpenses').innerText = expenses.toFixed(2) + " ₼";
   document.getElementById('deNet').innerText = (sales - expenses).toFixed(2) + " ₼";
