@@ -26,3 +26,6 @@ Bu versiyada əlavə edildi:
 
 ## Vacib
 Migration V2 əvvəl işlədilmiş olmalıdır. V3 onun üzərinə işləyir.
+
+### Dublikat məhsul düzəlişi
+Əgər məhsul siyahısında eyni ad iki dəfə görünürsə (məsələn S-24 və S-141), `supabase/fix_duplicate_products.sql` faylını Supabase SQL Editor-də bir dəfə Run edin. Bu skript eyni adlı məhsulları birləşdirir, stokun ikiqat yazılmasının qarşısını alır və gələcəkdə eyni adlı məhsulun yenidən yaradılmasına mane olur.
