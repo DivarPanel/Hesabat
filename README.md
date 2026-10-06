@@ -32,3 +32,6 @@ Migration V2 əvvəl işlədilmiş olmalıdır. V3 onun üzərinə işləyir.
 
 ## Cəld satış stok düzəlişi
 Supabase SQL Editor-də `supabase/fix_main_warehouse_from_product_stock.sql` faylını bir dəfə Run edin. Sonra saytı Ctrl+F5 ilə yeniləyin. Bu, məhsullar bölməsində düzgün olan stokları Əsas/Abşeron satış anbarında 0 olan sətrlərə yazır. Cəld satış artıq həmin anbardan stok yoxlayır və `create_sale_atomic` vasitəsilə satış zamanı anbardan azaldır.
+
+## Admin məhsul idarəetməsi
+Supabase SQL Editor-də `supabase/admin_product_edit.sql` faylını bir dəfə Run edin. Admin panel/Məhsullar bölməsində `✏️ Dəyiş` ilə məhsulun adı, barkodu, kateqoriyası, vahidi, maya qiyməti, satış qiyməti, minimum stoku, aktivliyi və seçilmiş anbardakı stoku dəyişdirilə bilər. Məhsul kodu (`S-...`) avtomatik olduğuna görə dəyişdirilmir. API Edge Function da yenilənib.
