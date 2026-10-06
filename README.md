@@ -44,3 +44,7 @@ Cəld satış yalnız Eurohome-dan. Digər anbarlar mal qəbulu üçün qalır.
 Qeyd: Təchizatçı stokları avtomatik Eurohome-a köçürülmür.
 
 V16: Admin müştəri bazasında ad, telefon, ünvan və balansı dəyişə bilər. Satış tarixçəsi olan müştəri qəsdən fiziki silinmir ki, qaimələr pozulmasın; tarixçəsi olmayan müştəri silinə bilər.
+
+
+## V20 Mobile Fix
+Telefon üçün menyu, toxunma düymələri, modal ölçüləri və dar ekranlarda grid davranışı yeniləndi. Kompüter funksiyaları saxlanılıb.
