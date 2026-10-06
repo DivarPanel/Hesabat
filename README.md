@@ -35,3 +35,12 @@ Supabase SQL Editor-də `supabase/fix_main_warehouse_from_product_stock.sql` fay
 
 ## Admin məhsul idarəetməsi
 Supabase SQL Editor-də `supabase/admin_product_edit.sql` faylını bir dəfə Run edin. Admin panel/Məhsullar bölməsində `✏️ Dəyiş` ilə məhsulun adı, barkodu, kateqoriyası, vahidi, maya qiyməti, satış qiyməti, minimum stoku, aktivliyi və seçilmiş anbardakı stoku dəyişdirilə bilər. Məhsul kodu (`S-...`) avtomatik olduğuna görə dəyişdirilmir. API Edge Function da yenilənib.
+
+V15: Admin məhsul redaktəsində mövcud stok, yeni stok və fərq, aydın qiymət etiketləri.
+Cəld satış yalnız Eurohome-dan. Digər anbarlar mal qəbulu üçün qalır.
+1) `supabase/eurohome_sales_only.sql` SQL Editor-də Run.
+2) `supabase/functions/api/index.ts` Edge Function kimi deploy.
+3) `frontend` fayllarını GitHub Pages-ə yerləşdir.
+Qeyd: Təchizatçı stokları avtomatik Eurohome-a köçürülmür.
+
+V16: Admin müştəri bazasında ad, telefon, ünvan və balansı dəyişə bilər. Satış tarixçəsi olan müştəri qəsdən fiziki silinmir ki, qaimələr pozulmasın; tarixçəsi olmayan müştəri silinə bilər.

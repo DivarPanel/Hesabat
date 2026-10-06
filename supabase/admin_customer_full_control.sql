@@ -1,0 +1,3 @@
+-- Admin müştəri idarəsi
+-- Satış tarixçəsi olan müştəri qəsdən fiziki silinmir: qaimələrin əlaqəsi qorunur.
+-- Admin həmin müştərinin məlumatlarını dəyişə bilər.
