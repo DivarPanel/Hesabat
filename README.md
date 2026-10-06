@@ -29,3 +29,6 @@ Migration V2 əvvəl işlədilmiş olmalıdır. V3 onun üzərinə işləyir.
 
 ### Dublikat məhsul düzəlişi
 Əgər məhsul siyahısında eyni ad iki dəfə görünürsə (məsələn S-24 və S-141), `supabase/fix_duplicate_products.sql` faylını Supabase SQL Editor-də bir dəfə Run edin. Bu skript eyni adlı məhsulları birləşdirir, stokun ikiqat yazılmasının qarşısını alır və gələcəkdə eyni adlı məhsulun yenidən yaradılmasına mane olur.
+
+## Cəld satış stok düzəlişi
+Supabase SQL Editor-də `supabase/fix_main_warehouse_from_product_stock.sql` faylını bir dəfə Run edin. Sonra saytı Ctrl+F5 ilə yeniləyin. Bu, məhsullar bölməsində düzgün olan stokları Əsas/Abşeron satış anbarında 0 olan sətrlərə yazır. Cəld satış artıq həmin anbardan stok yoxlayır və `create_sale_atomic` vasitəsilə satış zamanı anbardan azaldır.
