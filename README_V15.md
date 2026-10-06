@@ -1,0 +1,3 @@
+V15: Məhsul redaktəsində hər sahə etiketləndi; anbar üzrə hazırkı stok, yeni stok və fərq göstərilir. Satış yalnız Eurohome anbarına bağlanıb (frontend və Edge API yoxlaması). Digər anbarlar satış seçiminə çıxmır və mal qəbulu bölməsində qalır.
+Quraşdırma: frontend/ fayllarını GitHub Pages-ə yerləşdirin, supabase/functions/api/index.ts faylını Supabase Edge Function `api`-də yeniləyin. Supabase-də adı dəqiq "Eurohome" olan aktiv anbar olmalıdır.
+Qeyd: Digər anbarlardan Eurohome-a avtomatik transfer bu versiyaya daxil deyil; mal qəbulunu birbaşa təchizatçı anbarında aparırsınızsa, həmin mal Eurohome stokuna avtomatik keçmir. Satış üçün Eurohome stokunu ayrıca mədaxil/transferlə təmin edin.
